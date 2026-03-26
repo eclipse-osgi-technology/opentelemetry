@@ -1,0 +1,394 @@
+# =============================================================================
+# OpenTelemetry Observability Stack
+# =============================================================================
+# Single-file Podman pod definition containing:
+#   - OpenTelemetry Collector (receives traces, metrics, logs via OTLP)
+#   - Tempo (distributed tracing backend)
+#   - Prometheus (metrics storage)
+#   - Loki (log aggregation)
+#   - Grafana (visualization UI)
+#
+# All containers share localhost within the pod.
+# Start with: podman kube play observability-stack.yaml
+# Stop with:  podman pod stop observability && podman pod rm observability
+# =============================================================================
+
+# --- OTel Collector configuration ---
+# Receives OTLP on gRPC (:4317) and HTTP (:4318), forwards to Tempo/Prometheus/Loki
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-config
+data:
+  collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      memory_limiter:
+        limit_percentage: 60
+        spike_limit_percentage: 20
+        check_interval: 1s
+      batch:
+        timeout: 5s
+        send_batch_size: 1024
+      resource:
+        attributes:
+          - key: deployment.environment
+            value: development
+            action: upsert
+
+    exporters:
+      # Traces -> Tempo (gRPC on internal port 4320)
+      otlp/tempo:
+        endpoint: localhost:4320
+        tls:
+          insecure: true
+      # Metrics -> Prometheus (remote write)
+      prometheusremotewrite:
+        endpoint: http://localhost:9090/api/v1/write
+        tls:
+          insecure: true
+      # Logs -> Loki (OTLP HTTP)
+      otlphttp/loki:
+        endpoint: http://localhost:3100/otlp
+      debug:
+        verbosity: basic
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [otlp/tempo, debug]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [prometheusremotewrite, debug]
+        logs:
+          receivers: [otlp]
+          processors: [batch, resource]
+          exporters: [otlphttp/loki, debug]
+      telemetry:
+        logs:
+          level: info
+
+---
+# --- Prometheus configuration ---
+# Minimal config; metrics are pushed via remote write from the collector
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    remote_write: []
+
+---
+# --- Loki configuration ---
+# Single-instance, in-memory ring, filesystem storage
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-config
+data:
+  loki-config.yaml: |
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+    common:
+      path_prefix: /loki
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+      replication_factor: 1
+      ring:
+        kvstore:
+          store: inmemory
+    schema_config:
+      configs:
+        - from: "2024-01-01"
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    limits_config:
+      allow_structured_metadata: true
+      volume_enabled: true
+
+---
+# --- Tempo configuration ---
+# Tracing backend with metrics generator (service graphs + span metrics)
+# Receives traces from collector on gRPC :4320, query API on :3200
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+data:
+  tempo.yaml: |
+    stream_over_http_enabled: true
+    server:
+      http_listen_port: 3200
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4320
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /var/tempo/traces
+        wal:
+          path: /var/tempo/wal
+    metrics_generator:
+      registry:
+        collection_interval: 15s
+        external_labels:
+          source: tempo
+      processor:
+        service_graphs:
+          dimensions:
+            - http.method
+            - http.status_code
+          enable_client_server_prefix: true
+        span_metrics:
+          dimensions:
+            - http.method
+            - http.status_code
+            - http.route
+            - db.system
+            - db.operation
+        local_blocks:
+          max_live_traces: 10000
+          flush_to_storage: true
+      storage:
+        path: /var/tempo/metrics
+        remote_write:
+          - url: http://localhost:9090/api/v1/write
+      traces_storage:
+        path: /var/tempo/traces
+    query_frontend:
+      max_retries: 2
+      search:
+        max_duration: 0s
+    overrides:
+      defaults:
+        metrics_generator:
+          processors:
+            - service-graphs
+            - span-metrics
+            - local-blocks
+    ingester:
+      max_block_duration: 5m
+    compactor:
+      compaction:
+        block_retention: 1h
+
+---
+# --- Grafana datasources ---
+# Pre-configured connections to Tempo, Prometheus, and Loki
+# Includes cross-linking: traces <-> logs, traces <-> metrics, service map
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Tempo
+        type: tempo
+        uid: tempo
+        access: proxy
+        url: http://localhost:3200
+        isDefault: false
+        editable: true
+        jsonData:
+          httpMethod: GET
+          tracesToLogsV2:
+            datasourceUid: loki
+            filterByTraceID: true
+            filterBySpanID: false
+          tracesToMetrics:
+            datasourceUid: prometheus
+          nodeGraph:
+            enabled: true
+          serviceMap:
+            datasourceUid: prometheus
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        access: proxy
+        url: http://localhost:9090
+        isDefault: true
+        editable: true
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        url: http://localhost:3100
+        isDefault: false
+        editable: true
+        jsonData:
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: "traceID=(\\w+)"
+              name: TraceID
+              url: "$${__value.raw}"
+
+---
+# --- Grafana plugins ---
+# Explore plugins for traces, logs, and metrics drill-down
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-plugins
+data:
+  plugins.yaml: |
+    apiVersion: 1
+    apps:
+      - type: grafana-exploretraces-app
+        disabled: false
+      - type: grafana-lokiexplore-app
+        disabled: false
+      - type: grafana-metricsdrilldown-app
+        disabled: false
+
+---
+# =============================================================================
+# Pod definition
+# =============================================================================
+# All containers run in a single pod sharing localhost.
+# Exposed ports: 3000 (Grafana), 4317 (OTLP gRPC), 4318 (OTLP HTTP)
+# Internal ports: 9090 (Prometheus), 3100 (Loki), 3200 (Tempo)
+# Data volumes use emptyDir (ephemeral, lost on pod removal)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: observability
+spec:
+  containers:
+    # --- OTel Collector ---
+    # Entry point for all telemetry data (traces, metrics, logs)
+    - name: otel-collector
+      image: docker.io/otel/opentelemetry-collector-contrib:0.148.0
+      args: ["--config=/conf/collector-config.yaml"]
+      volumeMounts:
+        - name: collector-config
+          mountPath: /conf
+      ports:
+        - containerPort: 4317
+          hostPort: 4317
+        - containerPort: 4318
+          hostPort: 4318
+
+    # --- Tempo ---
+    # Distributed tracing backend, generates service graphs and span metrics
+    - name: tempo
+      image: docker.io/grafana/tempo:2.10.3
+      args: ["-config.file=/etc/tempo/tempo.yaml"]
+      volumeMounts:
+        - name: tempo-config
+          mountPath: /etc/tempo
+        - name: tempo-data
+          mountPath: /var/tempo
+      ports:
+        - containerPort: 4320
+        - containerPort: 3200
+
+    # --- Prometheus ---
+    # Metrics storage, receives data via remote write from collector and Tempo
+    - name: prometheus
+      image: docker.io/prom/prometheus:v3.10.0
+      args:
+        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--storage.tsdb.path=/prometheus"
+        - "--web.enable-remote-write-receiver"
+      volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-data
+          mountPath: /prometheus
+      ports:
+        - containerPort: 9090
+
+    # --- Loki ---
+    # Log aggregation, receives logs via OTLP from collector
+    - name: loki
+      image: docker.io/grafana/loki:3.6.7
+      args: ["-config.file=/etc/loki/loki-config.yaml"]
+      volumeMounts:
+        - name: loki-config
+          mountPath: /etc/loki
+        - name: loki-data
+          mountPath: /loki
+      ports:
+        - containerPort: 3100
+
+    # --- Grafana ---
+    # Visualization UI with pre-configured datasources and explore plugins
+    # Login: admin / admin (default, change on first login)
+    - name: grafana
+      image: docker.io/grafana/grafana:12.4.2
+      env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: "true"
+        - name: GF_INSTALL_PLUGINS
+          value: "grafana-exploretraces-app,grafana-lokiexplore-app,grafana-metricsdrilldown-app"
+      volumeMounts:
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: grafana-plugins
+          mountPath: /etc/grafana/provisioning/plugins
+        - name: grafana-data
+          mountPath: /var/lib/grafana
+      ports:
+        - containerPort: 3000
+          hostPort: 3000
+
+  volumes:
+    # ConfigMap volumes (configurations defined above)
+    - name: collector-config
+      configMap:
+        name: collector-config
+    - name: tempo-config
+      configMap:
+        name: tempo-config
+    - name: prometheus-config
+      configMap:
+        name: prometheus-config
+    - name: loki-config
+      configMap:
+        name: loki-config
+    - name: grafana-datasources
+      configMap:
+        name: grafana-datasources
+    - name: grafana-plugins
+      configMap:
+        name: grafana-plugins
+    # Data volumes (ephemeral - data is lost when pod is removed)
+    - name: tempo-data
+      emptyDir: {}
+    - name: prometheus-data
+      emptyDir: {}
+    - name: loki-data
+      emptyDir: {}
+    - name: grafana-data
+      emptyDir: {}
