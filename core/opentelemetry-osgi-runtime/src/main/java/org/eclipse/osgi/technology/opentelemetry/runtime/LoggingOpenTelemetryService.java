@@ -35,8 +35,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
     name = LoggingOpenTelemetryConfiguration.COMPONENT_NAME,
     service = OpenTelemetry.class,
     configurationPid = LoggingOpenTelemetryConfiguration.PID,
-    configurationPolicy = ConfigurationPolicy.REQUIRE,
-    immediate = true
+    configurationPolicy = ConfigurationPolicy.REQUIRE
 )
 @Designate(ocd = LoggingOpenTelemetryConfiguration.class)
 public class LoggingOpenTelemetryService extends AbstractOpenTelemetryService {

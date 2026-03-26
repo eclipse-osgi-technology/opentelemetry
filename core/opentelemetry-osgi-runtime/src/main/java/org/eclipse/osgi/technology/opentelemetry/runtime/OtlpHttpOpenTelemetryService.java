@@ -46,7 +46,6 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
     service = OpenTelemetry.class,
     configurationPid = OtlpHttpOpenTelemetryConfiguration.PID,
     configurationPolicy = ConfigurationPolicy.REQUIRE,
-    immediate = true,
     property = "service.ranking:Integer=100"
 )
 @Designate(ocd = OtlpHttpOpenTelemetryConfiguration.class)
