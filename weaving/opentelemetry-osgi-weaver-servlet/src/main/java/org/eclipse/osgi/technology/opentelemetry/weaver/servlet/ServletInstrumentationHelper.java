@@ -2,8 +2,8 @@ package org.eclipse.osgi.technology.opentelemetry.weaver.servlet;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.osgi.technology.opentelemetry.weaving.OpenTelemetryProxy;
 

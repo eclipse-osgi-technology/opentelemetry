@@ -12,7 +12,7 @@ import org.objectweb.asm.Opcodes;
  */
 class JaxRsClassVisitor extends ClassVisitor {
 
-    private static final String PATH_DESCRIPTOR = "Ljavax/ws/rs/Path;";
+    private static final String PATH_DESCRIPTOR = "Ljakarta/ws/rs/Path;";
 
     private String className;
     private String classPath = "";

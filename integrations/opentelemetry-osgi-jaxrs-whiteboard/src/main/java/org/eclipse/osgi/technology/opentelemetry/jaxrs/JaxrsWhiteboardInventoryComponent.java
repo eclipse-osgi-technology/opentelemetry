@@ -11,13 +11,13 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.jaxrs.runtime.JaxrsServiceRuntime;
-import org.osgi.service.jaxrs.runtime.dto.ApplicationDTO;
-import org.osgi.service.jaxrs.runtime.dto.BaseApplicationDTO;
-import org.osgi.service.jaxrs.runtime.dto.ExtensionDTO;
-import org.osgi.service.jaxrs.runtime.dto.ResourceDTO;
-import org.osgi.service.jaxrs.runtime.dto.ResourceMethodInfoDTO;
-import org.osgi.service.jaxrs.runtime.dto.RuntimeDTO;
+import org.osgi.service.jakartars.runtime.JakartarsServiceRuntime;
+import org.osgi.service.jakartars.runtime.dto.ApplicationDTO;
+import org.osgi.service.jakartars.runtime.dto.BaseApplicationDTO;
+import org.osgi.service.jakartars.runtime.dto.ExtensionDTO;
+import org.osgi.service.jakartars.runtime.dto.ResourceDTO;
+import org.osgi.service.jakartars.runtime.dto.ResourceMethodInfoDTO;
+import org.osgi.service.jakartars.runtime.dto.RuntimeDTO;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -26,7 +26,7 @@ import io.opentelemetry.api.logs.Severity;
 /**
  * Emits a structured inventory of the JAX-RS Whiteboard runtime as OpenTelemetry log records.
  * <p>
- * Dynamically tracks all available {@link JaxrsServiceRuntime} instances and emits
+ * Dynamically tracks all available {@link JakartarsServiceRuntime} instances and emits
  * a full snapshot on each bind showing the hierarchy: applications → resources →
  * resource methods, and extensions.
  * <p>
@@ -47,7 +47,7 @@ public class JaxrsWhiteboardInventoryComponent {
     private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.jaxrs.inventory";
 
     private final OpenTelemetry openTelemetry;
-    private final ConcurrentHashMap<JaxrsServiceRuntime, Long> services = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JakartarsServiceRuntime, Long> services = new ConcurrentHashMap<>();
 
     @Activate
     public JaxrsWhiteboardInventoryComponent(@Reference OpenTelemetry openTelemetry) {
@@ -56,7 +56,7 @@ public class JaxrsWhiteboardInventoryComponent {
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    void bindJaxrsServiceRuntime(JaxrsServiceRuntime runtime, Map<String, Object> properties) {
+    void bindJakartarsServiceRuntime(JakartarsServiceRuntime runtime, Map<String, Object> properties) {
         long serviceId = (Long) properties.getOrDefault("service.id", 0L);
         services.put(runtime, serviceId);
 
@@ -64,13 +64,13 @@ public class JaxrsWhiteboardInventoryComponent {
             .setInstrumentationVersion("0.1.0")
             .build();
         emitSnapshot(runtime, otelLogger);
-        LOG.info("Bound JaxrsServiceRuntime (service.id=" + serviceId + ") — inventory emitted");
+        LOG.info("Bound JakartarsServiceRuntime (service.id=" + serviceId + ") — inventory emitted");
     }
 
-    void unbindJaxrsServiceRuntime(JaxrsServiceRuntime runtime) {
+    void unbindJakartarsServiceRuntime(JakartarsServiceRuntime runtime) {
         Long serviceId = services.remove(runtime);
         if (serviceId != null) {
-            LOG.info("Unbound JaxrsServiceRuntime (service.id=" + serviceId + ")");
+            LOG.info("Unbound JakartarsServiceRuntime (service.id=" + serviceId + ")");
         }
     }
 
@@ -80,7 +80,7 @@ public class JaxrsWhiteboardInventoryComponent {
         LOG.info("JaxrsWhiteboardInventoryComponent deactivated");
     }
 
-    private void emitSnapshot(JaxrsServiceRuntime runtime, io.opentelemetry.api.logs.Logger otelLogger) {
+    private void emitSnapshot(JakartarsServiceRuntime runtime, io.opentelemetry.api.logs.Logger otelLogger) {
         try {
             RuntimeDTO dto = runtime.getRuntimeDTO();
             int appCount = dto.applicationDTOs != null ? dto.applicationDTOs.length : 0;

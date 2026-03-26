@@ -42,7 +42,7 @@ class ServletServiceMethodVisitor extends AdviceAdapter {
         loadArg(0); // req (first arg)
         visitLdcInsn(className.replace('/', '.'));
         visitMethodInsn(Opcodes.INVOKESTATIC, HELPER, "onServiceEnter",
-                "(Ljavax/servlet/http/HttpServletRequest;Ljava/lang/String;)[Ljava/lang/Object;",
+                "(Ljakarta/servlet/http/HttpServletRequest;Ljava/lang/String;)[Ljava/lang/Object;",
                 false);
         storeLocal(spanAndScopeLocal);
     }
@@ -63,6 +63,6 @@ class ServletServiceMethodVisitor extends AdviceAdapter {
         loadLocal(spanAndScopeLocal);
         loadArg(1); // resp
         visitMethodInsn(Opcodes.INVOKESTATIC, HELPER, "onServiceExit",
-                "([Ljava/lang/Object;Ljavax/servlet/http/HttpServletResponse;)V", false);
+                "([Ljava/lang/Object;Ljakarta/servlet/http/HttpServletResponse;)V", false);
     }
 }

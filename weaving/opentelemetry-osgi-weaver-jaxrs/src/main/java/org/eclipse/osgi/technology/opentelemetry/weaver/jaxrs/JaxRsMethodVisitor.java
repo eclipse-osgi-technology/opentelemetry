@@ -20,16 +20,16 @@ class JaxRsMethodVisitor extends AdviceAdapter {
 
     private static final String HELPER =
             "org/eclipse/osgi/technology/opentelemetry/weaver/jaxrs/JaxRsInstrumentationHelper";
-    private static final String PATH_DESCRIPTOR = "Ljavax/ws/rs/Path;";
+    private static final String PATH_DESCRIPTOR = "Ljakarta/ws/rs/Path;";
 
     private static final Map<String, String> HTTP_METHOD_ANNOTATIONS = Map.of(
-            "Ljavax/ws/rs/GET;", "GET",
-            "Ljavax/ws/rs/POST;", "POST",
-            "Ljavax/ws/rs/PUT;", "PUT",
-            "Ljavax/ws/rs/DELETE;", "DELETE",
-            "Ljavax/ws/rs/PATCH;", "PATCH",
-            "Ljavax/ws/rs/HEAD;", "HEAD",
-            "Ljavax/ws/rs/OPTIONS;", "OPTIONS");
+            "Ljakarta/ws/rs/GET;", "GET",
+            "Ljakarta/ws/rs/POST;", "POST",
+            "Ljakarta/ws/rs/PUT;", "PUT",
+            "Ljakarta/ws/rs/DELETE;", "DELETE",
+            "Ljakarta/ws/rs/PATCH;", "PATCH",
+            "Ljakarta/ws/rs/HEAD;", "HEAD",
+            "Ljakarta/ws/rs/OPTIONS;", "OPTIONS");
 
     private final String className;
     private final String classPath;

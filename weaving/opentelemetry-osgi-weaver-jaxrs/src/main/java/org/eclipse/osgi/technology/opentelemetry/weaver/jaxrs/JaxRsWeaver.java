@@ -14,7 +14,7 @@ import org.osgi.framework.hooks.weaving.WovenClass;
 
 /**
  * Weaver that instruments JAX-RS resource classes annotated with
- * {@code @javax.ws.rs.Path}.
+ * {@code @jakarta.ws.rs.Path}.
  * The instrumentation detects HTTP method annotations ({@code @GET},
  * {@code @POST}, {@code @PUT}, {@code @DELETE}, etc.) on methods and
  * wraps them to create OpenTelemetry spans capturing:
@@ -27,7 +27,7 @@ import org.osgi.framework.hooks.weaving.WovenClass;
  */
 public class JaxRsWeaver implements Weaver {
 
-    private static final String PATH_DESCRIPTOR = "Ljavax/ws/rs/Path;";
+    private static final String PATH_DESCRIPTOR = "Ljakarta/ws/rs/Path;";
 
     @Override
     public String name() {
@@ -36,7 +36,7 @@ public class JaxRsWeaver implements Weaver {
 
     @Override
     public boolean canWeave(String className, WovenClass wovenClass) {
-        if (className.startsWith("javax.ws.rs.")) {
+        if (className.startsWith("jakarta.ws.rs.")) {
             return false;
         }
         byte[] bytes = wovenClass.getBytes();

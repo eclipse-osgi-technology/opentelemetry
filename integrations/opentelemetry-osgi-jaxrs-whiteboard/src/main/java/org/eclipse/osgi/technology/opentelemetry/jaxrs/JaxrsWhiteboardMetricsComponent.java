@@ -11,10 +11,10 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.jaxrs.runtime.JaxrsServiceRuntime;
-import org.osgi.service.jaxrs.runtime.dto.ApplicationDTO;
-import org.osgi.service.jaxrs.runtime.dto.BaseApplicationDTO;
-import org.osgi.service.jaxrs.runtime.dto.RuntimeDTO;
+import org.osgi.service.jakartars.runtime.JakartarsServiceRuntime;
+import org.osgi.service.jakartars.runtime.dto.ApplicationDTO;
+import org.osgi.service.jakartars.runtime.dto.BaseApplicationDTO;
+import org.osgi.service.jakartars.runtime.dto.RuntimeDTO;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -25,7 +25,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 /**
  * Registers JAX-RS Whiteboard runtime metrics as OpenTelemetry async gauges.
  * <p>
- * Dynamically tracks all available {@link JaxrsServiceRuntime} instances and
+ * Dynamically tracks all available {@link JakartarsServiceRuntime} instances and
  * queries their DTOs on every metric collection cycle to reflect the live state:
  * <ul>
  *   <li>{@code osgi.jaxrs.applications} — Number of active JAX-RS applications</li>
@@ -43,7 +43,7 @@ public class JaxrsWhiteboardMetricsComponent {
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     private final OpenTelemetry openTelemetry;
-    private final ConcurrentHashMap<JaxrsServiceRuntime, JaxrsWhiteboardMetricsState> services = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JakartarsServiceRuntime, JaxrsWhiteboardMetricsState> services = new ConcurrentHashMap<>();
 
     @Activate
     public JaxrsWhiteboardMetricsComponent(@Reference OpenTelemetry openTelemetry) {
@@ -52,7 +52,7 @@ public class JaxrsWhiteboardMetricsComponent {
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    void bindJaxrsServiceRuntime(JaxrsServiceRuntime runtime, Map<String, Object> properties) {
+    void bindJakartarsServiceRuntime(JakartarsServiceRuntime runtime, Map<String, Object> properties) {
         long serviceId = (Long) properties.getOrDefault("service.id", 0L);
         Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE);
 
@@ -151,14 +151,14 @@ public class JaxrsWhiteboardMetricsComponent {
         JaxrsWhiteboardMetricsState state = new JaxrsWhiteboardMetricsState(serviceId,
             applicationsGauge, resourcesGauge, extensionsGauge, resourceMethodsGauge, failedGauge);
         services.put(runtime, state);
-        LOG.info("Bound JaxrsServiceRuntime (service.id=" + serviceId + ") — JAX-RS Whiteboard metrics registered");
+        LOG.info("Bound JakartarsServiceRuntime (service.id=" + serviceId + ") — JAX-RS Whiteboard metrics registered");
     }
 
-    void unbindJaxrsServiceRuntime(JaxrsServiceRuntime runtime) {
+    void unbindJakartarsServiceRuntime(JakartarsServiceRuntime runtime) {
         JaxrsWhiteboardMetricsState state = services.remove(runtime);
         if (state != null) {
             state.close();
-            LOG.info("Unbound JaxrsServiceRuntime (service.id=" + state.serviceId() + ") — metrics removed");
+            LOG.info("Unbound JakartarsServiceRuntime (service.id=" + state.serviceId() + ") — metrics removed");
         }
     }
 

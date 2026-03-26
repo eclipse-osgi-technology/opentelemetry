@@ -14,7 +14,7 @@ import org.objectweb.asm.Opcodes;
  */
 class ServletClassVisitor extends ClassVisitor {
 
-    private static final String HTTP_DESCRIPTOR = "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V";
+    private static final String HTTP_DESCRIPTOR = "(Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;)V";
     private static final java.util.Set<String> INSTRUMENTABLE_METHODS = java.util.Set.of(
             "service", "doGet", "doPost", "doPut", "doDelete", "doHead", "doOptions", "doTrace");
 
