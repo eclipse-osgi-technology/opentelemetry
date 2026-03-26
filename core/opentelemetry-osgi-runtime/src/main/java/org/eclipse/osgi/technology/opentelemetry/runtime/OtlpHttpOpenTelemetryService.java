@@ -10,6 +10,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.propertytypes.ServiceRanking;
 import org.osgi.service.metatype.annotations.Designate;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -45,9 +46,9 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
     name = OtlpHttpOpenTelemetryConfiguration.COMPONENT_NAME,
     service = OpenTelemetry.class,
     configurationPid = OtlpHttpOpenTelemetryConfiguration.PID,
-    configurationPolicy = ConfigurationPolicy.REQUIRE,
-    property = "service.ranking:Integer=100"
+    configurationPolicy = ConfigurationPolicy.REQUIRE
 )
+@ServiceRanking(100)
 @Designate(ocd = OtlpHttpOpenTelemetryConfiguration.class)
 public class OtlpHttpOpenTelemetryService extends AbstractOpenTelemetryService {
 
