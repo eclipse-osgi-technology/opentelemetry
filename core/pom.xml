@@ -5,17 +5,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.eclipse.osgi-technology</groupId>
-        <artifactId>opentelemetry-osgi-parent</artifactId>
+        <groupId>org.eclipse.osgi-technology.opentelemetry</groupId>
+        <artifactId>org.eclipse.osgi-technology.opentelemetry</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>opentelemetry-osgi-core-parent</artifactId>
+    <artifactId>org.eclipse.osgi-technology.opentelemetry.core</artifactId>
     <packaging>pom</packaging>
     <name>OpenTelemetry OSGi Core</name>
     <description>Core OpenTelemetry runtime for OSGi</description>
 
     <modules>
-        <module>opentelemetry-osgi-runtime</module>
+        <module>commons</module>
+        <module>sender.log</module>
+        <module>sender.http</module>
     </modules>
 </project>

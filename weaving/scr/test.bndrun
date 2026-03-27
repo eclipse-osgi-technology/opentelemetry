@@ -1,0 +1,14 @@
+-tester: biz.aQute.tester.junit-platform
+-runee: JavaSE-21
+-runfw: org.apache.felix.framework
+-runstartlevel: order=sortbynameversion, begin=-1
+-resolve.effective: active
+
+-runrequires: \
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.weaving.osgi.scr-tests',\
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.weaving.osgi.scr',\
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.weaving.hook',\
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.commons',\
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.weaving.osgi.scr.test.app'
+
+-runbundles: ${empty}

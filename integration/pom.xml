@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.eclipse.osgi-technology.opentelemetry</groupId>
+        <artifactId>org.eclipse.osgi-technology.opentelemetry</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>org.eclipse.osgi-technology.opentelemetry.integration</artifactId>
+    <packaging>pom</packaging>
+    <name>OpenTelemetry OSGi Integration</name>
+    <description>Integration bundles bridging OSGi subsystems to OpenTelemetry</description>
+
+    <modules>
+        <module>framework</module>
+        <module>scr</module>
+        <module>log</module>
+        <module>felix.healthcheck</module>
+        <module>cm</module>
+        <module>mxbeans</module>
+        <module>typedevent</module>
+        <module>jakarta.servlet</module>
+        <module>jakarta.rest</module>
+    </modules>
+</project>

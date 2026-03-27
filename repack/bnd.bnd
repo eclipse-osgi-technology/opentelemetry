@@ -1,0 +1,55 @@
+Export-Package: \
+ io.opentelemetry.api,\
+ io.opentelemetry.api.baggage,\
+ io.opentelemetry.api.baggage.propagation,\
+ io.opentelemetry.api.common,\
+ io.opentelemetry.api.logs,\
+ io.opentelemetry.api.metrics,\
+ io.opentelemetry.api.trace,\
+ io.opentelemetry.api.trace.propagation,\
+ io.opentelemetry.context,\
+ io.opentelemetry.context.propagation,\
+ io.opentelemetry.sdk,\
+ io.opentelemetry.sdk.autoconfigure,\
+ io.opentelemetry.sdk.autoconfigure.spi,\
+ io.opentelemetry.sdk.autoconfigure.spi.logs,\
+ io.opentelemetry.sdk.autoconfigure.spi.metrics,\
+ io.opentelemetry.sdk.autoconfigure.spi.traces,\
+ io.opentelemetry.sdk.common,\
+ io.opentelemetry.sdk.common.export,\
+ io.opentelemetry.sdk.logs,\
+ io.opentelemetry.sdk.logs.data,\
+ io.opentelemetry.sdk.logs.export,\
+ io.opentelemetry.sdk.metrics,\
+ io.opentelemetry.sdk.metrics.data,\
+ io.opentelemetry.sdk.metrics.export,\
+ io.opentelemetry.sdk.resources,\
+ io.opentelemetry.sdk.trace,\
+ io.opentelemetry.sdk.trace.data,\
+ io.opentelemetry.sdk.trace.export,\
+ io.opentelemetry.sdk.trace.samplers,\
+ io.opentelemetry.exporter.logging,\
+ io.opentelemetry.exporter.otlp.http.trace,\
+ io.opentelemetry.exporter.otlp.http.metrics,\
+ io.opentelemetry.exporter.otlp.http.logs,\
+ io.opentelemetry.exporter.otlp.trace,\
+ io.opentelemetry.exporter.otlp.metrics,\
+ io.opentelemetry.exporter.otlp.logs
+
+Private-Package: io.opentelemetry.*
+
+Import-Package: \
+ java.*,\
+ javax.net.ssl,\
+ !io.opentelemetry.*,\
+ !io.grpc.*,\
+ !okio.*,\
+ *;resolution:=optional
+
+-split-package: merge-first
+
+-includeresource: META-INF/services/=src/main/resources/META-INF/services/
+
+Require-Capability: osgi.extender;filter:="(osgi.extender=osgi.serviceloader.processor)"
+Provide-Capability: osgi.serviceloader;osgi.serviceloader=io.opentelemetry.sdk.common.export.HttpSenderProvider
+

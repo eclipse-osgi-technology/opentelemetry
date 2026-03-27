@@ -1,0 +1,14 @@
+-tester: biz.aQute.tester.junit-platform
+-runee: JavaSE-21
+-runfw: org.apache.felix.framework
+-runstartlevel: order=sortbynameversion, begin=-1
+
+-resolve.effective: active
+
+-runrequires: \
+	bnd.identity;id='${project.artifactId}-tests',\
+	bnd.identity;id='${project.artifactId}',\
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.commons',\
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.sender.log'
+
+-runbundles: ${empty}
