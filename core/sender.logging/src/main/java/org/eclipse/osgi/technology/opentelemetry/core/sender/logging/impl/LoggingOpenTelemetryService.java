@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2026 Contributors to the Eclipse Foundation
+ * All rights reserved. 
+ * 
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ * 
+ * Contributors:
+ * 
+ */
+
 package org.eclipse.osgi.technology.opentelemetry.core.sender.logging.impl;
 
 import java.util.logging.Logger;
@@ -30,7 +44,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
  * <p>
  * Useful for development and debugging without requiring an external collector.
  * Activates when a configuration with PID
- * {@value LoggingOpenTelemetryConfiguration#PID} exists.
+ * {@link org.eclipse.osgi.technology.opentelemetry.core.sender.logging.api.Constants#PID Constants.PID} exists.
  */
 @Component(name = LoggingOpenTelemetryConfiguration.COMPONENT_NAME, service = OpenTelemetry.class, configurationPid = org.eclipse.osgi.technology.opentelemetry.core.sender.logging.api.Constants.PID, configurationPolicy = ConfigurationPolicy.REQUIRE, scope = ServiceScope.SINGLETON)
 @Designate(ocd = LoggingOpenTelemetryConfiguration.class)
