@@ -7,8 +7,6 @@
 
 -runrequires: \
 	bnd.identity;id='${project.artifactId}-tests',\
-	bnd.identity;id='${project.artifactId}',\
-	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.commons',\
-	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.sender.logging'
+	bnd.identity;id='${project.artifactId}'
 
 -runbundles: ${empty}

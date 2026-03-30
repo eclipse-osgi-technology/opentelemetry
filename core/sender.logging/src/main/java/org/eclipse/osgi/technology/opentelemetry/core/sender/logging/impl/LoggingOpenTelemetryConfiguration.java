@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2026 Contributors to the Eclipse Foundation
+ * All rights reserved. 
+ * 
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ * 
+ * Contributors:
+ * 
+ */
+
 package org.eclipse.osgi.technology.opentelemetry.core.sender.logging.impl;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -6,7 +20,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 /**
  * Configuration for the logging-based OpenTelemetry exporter.
  * <p>
- * Properties can be set via OSGi ConfigAdmin using the PID {@value #PID}.
+ * Properties can be set via OSGi ConfigAdmin using the PID
+ * {@link org.eclipse.osgi.technology.opentelemetry.core.sender.logging.api.Constants#PID}.
  * <p>
  * The logging exporter outputs telemetry to stdout via
  * {@code java.util.logging}, useful for development and debugging without
