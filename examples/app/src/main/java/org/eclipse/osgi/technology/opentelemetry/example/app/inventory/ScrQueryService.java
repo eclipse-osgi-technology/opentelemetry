@@ -12,79 +12,75 @@ import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
 
 /**
- * Passive DTO query service for the Declarative Services runtime.
- * Reads {@link ServiceComponentRuntime} DTOs to report component states.
- * Does NOT produce telemetry itself — the integration bundle
+ * Passive DTO query service for the Declarative Services runtime. Reads
+ * {@link ServiceComponentRuntime} DTOs to report component states. Does NOT
+ * produce telemetry itself — the integration bundle
  * {@code opentelemetry-osgi-scr} handles that automatically.
  */
 @Component(service = ScrQueryService.class, immediate = true)
 public class ScrQueryService {
 
-    @Reference
-    private ServiceComponentRuntime scr;
+	@Reference
+	private ServiceComponentRuntime scr;
 
-    public String getComponentReport() {
-        StringBuilder sb = new StringBuilder();
-        Collection<ComponentDescriptionDTO> descriptions = scr.getComponentDescriptionDTOs();
-        for (ComponentDescriptionDTO desc : descriptions) {
-            Collection<ComponentConfigurationDTO> configs =
-                    scr.getComponentConfigurationDTOs(desc);
-            for (ComponentConfigurationDTO config : configs) {
-                sb.append(stateToString(config.state))
-                  .append("  ").append(desc.name)
-                  .append(" (").append(desc.bundle.symbolicName).append(")\n");
-            }
-            if (configs.isEmpty()) {
-                sb.append("UNCONFIGURED  ").append(desc.name)
-                  .append(" (").append(desc.bundle.symbolicName).append(")\n");
-            }
-        }
-        return sb.length() == 0 ? "No components found\n" : sb.toString();
-    }
+	public String getComponentReport() {
+		StringBuilder sb = new StringBuilder();
+		Collection<ComponentDescriptionDTO> descriptions = scr.getComponentDescriptionDTOs();
+		for (ComponentDescriptionDTO desc : descriptions) {
+			Collection<ComponentConfigurationDTO> configs = scr.getComponentConfigurationDTOs(desc);
+			for (ComponentConfigurationDTO config : configs) {
+				sb.append(stateToString(config.state)).append("  ").append(desc.name).append(" (")
+						.append(desc.bundle.symbolicName).append(")\n");
+			}
+			if (configs.isEmpty()) {
+				sb.append("UNCONFIGURED  ").append(desc.name).append(" (").append(desc.bundle.symbolicName)
+						.append(")\n");
+			}
+		}
+		return sb.length() == 0 ? "No components found\n" : sb.toString();
+	}
 
-    public long getActiveCount() {
-        return countByState(ComponentConfigurationDTO.ACTIVE);
-    }
+	public long getActiveCount() {
+		return countByState(ComponentConfigurationDTO.ACTIVE);
+	}
 
-    public long getFailedCount() {
-        return countByState(ComponentConfigurationDTO.FAILED_ACTIVATION);
-    }
+	public long getFailedCount() {
+		return countByState(ComponentConfigurationDTO.FAILED_ACTIVATION);
+	}
 
-    public List<String> getUnsatisfiedComponents() {
-        List<String> unsatisfied = new ArrayList<>();
-        for (ComponentDescriptionDTO desc : scr.getComponentDescriptionDTOs()) {
-            for (ComponentConfigurationDTO config :
-                    scr.getComponentConfigurationDTOs(desc)) {
-                if (config.state == ComponentConfigurationDTO.UNSATISFIED_REFERENCE
-                        || config.state == ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION) {
-                    unsatisfied.add(desc.name);
-                }
-            }
-        }
-        return Collections.unmodifiableList(unsatisfied);
-    }
+	public List<String> getUnsatisfiedComponents() {
+		List<String> unsatisfied = new ArrayList<>();
+		for (ComponentDescriptionDTO desc : scr.getComponentDescriptionDTOs()) {
+			for (ComponentConfigurationDTO config : scr.getComponentConfigurationDTOs(desc)) {
+				if (config.state == ComponentConfigurationDTO.UNSATISFIED_REFERENCE
+						|| config.state == ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION) {
+					unsatisfied.add(desc.name);
+				}
+			}
+		}
+		return Collections.unmodifiableList(unsatisfied);
+	}
 
-    private long countByState(int state) {
-        long count = 0;
-        for (ComponentDescriptionDTO desc : scr.getComponentDescriptionDTOs()) {
-            for (ComponentConfigurationDTO config :
-                    scr.getComponentConfigurationDTOs(desc)) {
-                if (config.state == state) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
+	private long countByState(int state) {
+		long count = 0;
+		for (ComponentDescriptionDTO desc : scr.getComponentDescriptionDTOs()) {
+			for (ComponentConfigurationDTO config : scr.getComponentConfigurationDTOs(desc)) {
+				if (config.state == state) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
 
-    private String stateToString(int state) {
-        return switch (state) {
-            case ComponentConfigurationDTO.ACTIVE -> "ACTIVE       ";
-            case ComponentConfigurationDTO.SATISFIED -> "SATISFIED    ";
-            case ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION -> "UNSAT_CONFIG ";
-            case ComponentConfigurationDTO.UNSATISFIED_REFERENCE -> "UNSAT_REF    ";
-            case ComponentConfigurationDTO.FAILED_ACTIVATION -> "FAILED       ";
-            default -> "UNKNOWN(" + state + ")";
-        };
-    }
+	private String stateToString(int state) {
+		return switch (state) {
+		case ComponentConfigurationDTO.ACTIVE -> "ACTIVE       ";
+		case ComponentConfigurationDTO.SATISFIED -> "SATISFIED    ";
+		case ComponentConfigurationDTO.UNSATISFIED_CONFIGURATION -> "UNSAT_CONFIG ";
+		case ComponentConfigurationDTO.UNSATISFIED_REFERENCE -> "UNSAT_REF    ";
+		case ComponentConfigurationDTO.FAILED_ACTIVATION -> "FAILED       ";
+		default -> "UNKNOWN(" + state + ")";
+		};
+	}
 }

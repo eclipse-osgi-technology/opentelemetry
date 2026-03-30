@@ -17,7 +17,7 @@
 
     <modules>
         <module>commons</module>
-        <module>sender.log</module>
+        <module>sender.logging</module>
         <module>sender.http</module>
     </modules>
 </project>

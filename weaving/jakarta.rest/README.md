@@ -1,6 +1,6 @@
 # OpenTelemetry JAX-RS Weaver
 
-A fragment bundle attaching to the [weaving host](../opentelemetry-osgi-weaving/README.md) that instruments JAX-RS resource classes annotated with `@javax.ws.rs.Path`.
+A fragment bundle attaching to the [weaving host](../hook/README.md) that instruments JAX-RS resource classes annotated with `@javax.ws.rs.Path`.
 Only methods annotated with HTTP method annotations (`@GET`, `@POST`, `@PUT`, `@DELETE`, `@PATCH`, `@HEAD`, `@OPTIONS`) are instrumented.
 
 ## Detection

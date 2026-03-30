@@ -47,7 +47,7 @@ import io.opentelemetry.context.Scope;
 public class ScrHealthCheckComponent {
 
     private static final Logger LOG = Logger.getLogger(ScrHealthCheckComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.scr.healthcheck";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.scr";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)

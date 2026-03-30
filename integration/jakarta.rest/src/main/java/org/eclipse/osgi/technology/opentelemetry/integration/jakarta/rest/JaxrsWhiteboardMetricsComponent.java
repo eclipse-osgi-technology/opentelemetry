@@ -14,6 +14,9 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.jakartars.runtime.JakartarsServiceRuntime;
 import org.osgi.service.jakartars.runtime.dto.ApplicationDTO;
 import org.osgi.service.jakartars.runtime.dto.BaseApplicationDTO;
+import org.osgi.service.jakartars.runtime.dto.ExtensionDTO;
+import org.osgi.service.jakartars.runtime.dto.ResourceDTO;
+import org.osgi.service.jakartars.runtime.dto.ResourceMethodInfoDTO;
 import org.osgi.service.jakartars.runtime.dto.RuntimeDTO;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -39,7 +42,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class JaxrsWhiteboardMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(JaxrsWhiteboardMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.jaxrs";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.jakarta.rest";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
@@ -149,8 +152,63 @@ public class JaxrsWhiteboardMetricsComponent {
                 }
             });
 
+        ObservableLongGauge resourceInfoGauge = meter.gaugeBuilder("osgi.jaxrs.resource.info")
+            .setDescription("Per-resource metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    emitResourceInfoForApp(measurement, dto.defaultApplication, serviceId);
+                    if (dto.applicationDTOs != null) {
+                        for (ApplicationDTO app : dto.applicationDTOs) {
+                            emitResourceInfoForApp(measurement, app, serviceId);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read resource info", e);
+                }
+            });
+
+        ObservableLongGauge extensionInfoGauge = meter.gaugeBuilder("osgi.jaxrs.extension.info")
+            .setDescription("Per-extension metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    emitExtensionInfoForApp(measurement, dto.defaultApplication, serviceId);
+                    if (dto.applicationDTOs != null) {
+                        for (ApplicationDTO app : dto.applicationDTOs) {
+                            emitExtensionInfoForApp(measurement, app, serviceId);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read extension info", e);
+                }
+            });
+
+        ObservableLongGauge resourceMethodInfoGauge = meter.gaugeBuilder("osgi.jaxrs.resource.method.info")
+            .setDescription("Per-resource-method metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    emitResourceMethodInfoForApp(measurement, dto.defaultApplication, serviceId);
+                    if (dto.applicationDTOs != null) {
+                        for (ApplicationDTO app : dto.applicationDTOs) {
+                            emitResourceMethodInfoForApp(measurement, app, serviceId);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read resource method info", e);
+                }
+            });
+
         JaxrsWhiteboardMetricsState state = new JaxrsWhiteboardMetricsState(serviceId,
-            applicationsGauge, resourcesGauge, extensionsGauge, resourceMethodsGauge, failedGauge);
+            applicationsGauge, resourcesGauge, extensionsGauge, resourceMethodsGauge, failedGauge,
+            resourceInfoGauge, extensionInfoGauge, resourceMethodInfoGauge);
         services.put(runtime, state);
         LOG.info("Bound JakartarsServiceRuntime (service.id=" + serviceId + ") — JAX-RS Whiteboard metrics registered");
     }
@@ -207,5 +265,59 @@ public class JaxrsWhiteboardMetricsComponent {
             .put(AttributeKey.stringKey("application.base"), app.base != null ? app.base : "/")
             .put(SERVICE_ID_KEY, serviceId)
             .build();
+    }
+
+    private static void emitResourceInfoForApp(
+            io.opentelemetry.api.metrics.ObservableLongMeasurement measurement,
+            BaseApplicationDTO app, long serviceId) {
+        if (app == null || app.resourceDTOs == null) return;
+        for (ResourceDTO resource : app.resourceDTOs) {
+            Attributes attrs = Attributes.builder()
+                .put(AttributeKey.stringKey("application.name"), app.name != null ? app.name : "default")
+                .put(AttributeKey.stringKey("application.base"), app.base != null ? app.base : "/")
+                .put(AttributeKey.stringKey("resource.name"), resource.name != null ? resource.name : "unknown")
+                .put(AttributeKey.longKey("resource.method.count"),
+                    resource.resourceMethods != null ? resource.resourceMethods.length : 0)
+                .put(SERVICE_ID_KEY, serviceId)
+                .build();
+            measurement.record(1, attrs);
+        }
+    }
+
+    private static void emitExtensionInfoForApp(
+            io.opentelemetry.api.metrics.ObservableLongMeasurement measurement,
+            BaseApplicationDTO app, long serviceId) {
+        if (app == null || app.extensionDTOs == null) return;
+        for (ExtensionDTO extension : app.extensionDTOs) {
+            Attributes attrs = Attributes.builder()
+                .put(AttributeKey.stringKey("application.name"), app.name != null ? app.name : "default")
+                .put(AttributeKey.stringKey("application.base"), app.base != null ? app.base : "/")
+                .put(AttributeKey.stringKey("extension.name"), extension.name != null ? extension.name : "unknown")
+                .put(AttributeKey.stringKey("extension.types"),
+                    extension.extensionTypes != null ? String.join(", ", extension.extensionTypes) : "")
+                .put(SERVICE_ID_KEY, serviceId)
+                .build();
+            measurement.record(1, attrs);
+        }
+    }
+
+    private static void emitResourceMethodInfoForApp(
+            io.opentelemetry.api.metrics.ObservableLongMeasurement measurement,
+            BaseApplicationDTO app, long serviceId) {
+        if (app == null || app.resourceDTOs == null) return;
+        for (ResourceDTO resource : app.resourceDTOs) {
+            if (resource.resourceMethods == null) continue;
+            for (ResourceMethodInfoDTO method : resource.resourceMethods) {
+                Attributes attrs = Attributes.builder()
+                    .put(AttributeKey.stringKey("application.name"), app.name != null ? app.name : "default")
+                    .put(AttributeKey.stringKey("application.base"), app.base != null ? app.base : "/")
+                    .put(AttributeKey.stringKey("resource.name"), resource.name != null ? resource.name : "unknown")
+                    .put(AttributeKey.stringKey("method.http"), method.method != null ? method.method : "unknown")
+                    .put(AttributeKey.stringKey("method.path"), method.path != null ? method.path : "/")
+                    .put(SERVICE_ID_KEY, serviceId)
+                    .build();
+                measurement.record(1, attrs);
+            }
+        }
     }
 }

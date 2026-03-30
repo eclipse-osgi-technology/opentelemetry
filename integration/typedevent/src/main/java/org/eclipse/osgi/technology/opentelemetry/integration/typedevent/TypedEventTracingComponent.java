@@ -31,7 +31,7 @@ import io.opentelemetry.context.Scope;
 public class TypedEventTracingComponent implements UntypedEventHandler {
 
     private static final Logger LOG = Logger.getLogger(TypedEventTracingComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.typedevent.tracing";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.typedevent";
     private static final int MAX_DATA_ATTRIBUTES = 20;
 
     @Reference(policy = ReferencePolicy.DYNAMIC)

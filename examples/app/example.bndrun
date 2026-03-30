@@ -31,8 +31,7 @@
 	bnd.identity;id='org.apache.felix.configadmin',\
 	bnd.identity;id='slf4j.simple',\
 	bnd.identity;id='org.apache.felix.log',\
-	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.sender.http',\
-	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.sender.log'
+	bnd.identity;id='org.eclipse.osgi-technology.opentelemetry.core.sender.http'
 
 
 -runbundles: \
@@ -104,5 +103,4 @@
 	slf4j.simple;version='[2.0.17,2.0.18)',\
 	com.h2database;version='[2.2.224,2.2.225)',\
 	org.eclipse.osgi-technology.opentelemetry.core.commons;version='[0.1.0,0.1.1)',\
-	org.eclipse.osgi-technology.opentelemetry.core.sender.http;version='[0.1.0,0.1.1)',\
-	org.eclipse.osgi-technology.opentelemetry.core.sender.log;version='[0.1.0,0.1.1)'
+	org.eclipse.osgi-technology.opentelemetry.core.sender.http;version='[0.1.0,0.1.1)'

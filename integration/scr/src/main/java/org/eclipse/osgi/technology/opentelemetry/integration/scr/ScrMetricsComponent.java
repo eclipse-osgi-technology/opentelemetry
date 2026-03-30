@@ -46,7 +46,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class ScrMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(ScrMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.scr";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.scr";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)

@@ -13,7 +13,10 @@ record JaxrsWhiteboardMetricsState(
     ObservableLongGauge resourcesGauge,
     ObservableLongGauge extensionsGauge,
     ObservableLongGauge resourceMethodsGauge,
-    ObservableLongGauge failedGauge
+    ObservableLongGauge failedGauge,
+    ObservableLongGauge resourceInfoGauge,
+    ObservableLongGauge extensionInfoGauge,
+    ObservableLongGauge resourceMethodInfoGauge
 ) implements AutoCloseable {
 
     @Override
@@ -23,6 +26,9 @@ record JaxrsWhiteboardMetricsState(
         closeQuietly(extensionsGauge);
         closeQuietly(resourceMethodsGauge);
         closeQuietly(failedGauge);
+        closeQuietly(resourceInfoGauge);
+        closeQuietly(extensionInfoGauge);
+        closeQuietly(resourceMethodInfoGauge);
     }
 
     private static void closeQuietly(AutoCloseable closeable) {

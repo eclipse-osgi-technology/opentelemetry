@@ -18,45 +18,37 @@ import jakarta.ws.rs.core.Response;
  * Simple demo JAX-RS resource on REST Whiteboard 1 (rest1, port 8181).
  *
  * <ul>
- *   <li>GET /alpha → greeting</li>
- *   <li>GET /alpha/{id} → lookup by id</li>
- *   <li>POST /alpha → create item</li>
+ * <li>GET /alpha → greeting</li>
+ * <li>GET /alpha/{id} → lookup by id</li>
+ * <li>POST /alpha → create item</li>
  * </ul>
  */
-@Component(
-    service = AlphaResource.class,
-    property = {
-        JakartarsWhiteboardConstants.JAKARTA_RS_RESOURCE + "=true",
-    }
-)
+@Component(service = AlphaResource.class, property = { JakartarsWhiteboardConstants.JAKARTA_RS_RESOURCE + "=true", })
 @Path("/alpha")
 public class AlphaResource {
 
-    private final AtomicLong counter = new AtomicLong(0);
+	private final AtomicLong counter = new AtomicLong(0);
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response list() {
-        return Response.ok(
-                "{\"resource\":\"alpha\",\"value\":\"hello-alpha\",\"count\":"
-                + counter.get() + "}").build();
-    }
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response list() {
+		return Response.ok("{\"resource\":\"alpha\",\"value\":\"hello-alpha\",\"count\":" + counter.get() + "}")
+				.build();
+	}
 
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getById(@PathParam("id") String id) {
-        return Response.ok(
-                "{\"resource\":\"alpha\",\"id\":\"" + id + "\",\"found\":true}").build();
-    }
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getById(@PathParam("id") String id) {
+		return Response.ok("{\"resource\":\"alpha\",\"id\":\"" + id + "\",\"found\":true}").build();
+	}
 
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response create(String body) {
-        long id = counter.incrementAndGet();
-        return Response.status(Response.Status.CREATED)
-                .entity("{\"resource\":\"alpha\",\"created\":\"" + id + "\",\"status\":\"ok\"}")
-                .build();
-    }
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response create(String body) {
+		long id = counter.incrementAndGet();
+		return Response.status(Response.Status.CREATED)
+				.entity("{\"resource\":\"alpha\",\"created\":\"" + id + "\",\"status\":\"ok\"}").build();
+	}
 }

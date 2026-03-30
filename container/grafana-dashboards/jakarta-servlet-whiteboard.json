@@ -1,0 +1,549 @@
+{
+  "uid": "jakarta-servlet-whiteboard",
+  "title": "Jakarta Servlet Whiteboard",
+  "description": "OSGi HTTP Whiteboard introspection: servlet contexts, servlets, filters, listeners, resources per context",
+  "tags": ["osgi", "opentelemetry", "servlet", "whiteboard"],
+  "timezone": "browser",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(osgi_http_whiteboard_contexts, job)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "sort": 1
+      },
+      {
+        "name": "context_name",
+        "label": "Servlet Context",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(osgi_http_whiteboard_servlets{job=~\"$instance\"}, context_name)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "links": [],
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "id": 1
+    },
+    {
+      "type": "stat",
+      "title": "Servlet Contexts",
+      "id": 2,
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "green", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "sum(osgi_http_whiteboard_contexts{job=~\"$instance\"})",
+        "legendFormat": "contexts",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Servlets",
+      "id": 3,
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "sum(osgi_http_whiteboard_servlets{job=~\"$instance\"})",
+        "legendFormat": "servlets",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Filters",
+      "id": 4,
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "purple", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "sum(osgi_http_whiteboard_filters{job=~\"$instance\"})",
+        "legendFormat": "filters",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Listeners",
+      "id": 5,
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "orange", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "sum(osgi_http_whiteboard_listeners{job=~\"$instance\"})",
+        "legendFormat": "listeners",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Resources",
+      "id": 6,
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "yellow", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "sum(osgi_http_whiteboard_resources{job=~\"$instance\"})",
+        "legendFormat": "resources",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Failed Registrations",
+      "id": 7,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "sum(osgi_http_whiteboard_failed{job=~\"$instance\"})",
+        "legendFormat": "failed",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "row",
+      "title": "Servlet Context: $context_name",
+      "id": 100,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false,
+      "repeat": "context_name",
+      "repeatDirection": "h"
+    },
+    {
+      "type": "stat",
+      "title": "Servlets",
+      "id": 101,
+      "gridPos": { "h": 3, "w": 4, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_servlets{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "servlets",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Filters",
+      "id": 102,
+      "gridPos": { "h": 3, "w": 4, "x": 4, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "purple", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_filters{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "filters",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Listeners",
+      "id": 103,
+      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "orange", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_listeners{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "listeners",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Resources",
+      "id": 104,
+      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "yellow", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_resources{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "resources",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Error Pages",
+      "id": 105,
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [{ "color": "semi-dark-red", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_error_pages{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "error pages",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "table",
+      "title": "Servlets in $context_name",
+      "id": 110,
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Time" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "osgi_service_id" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "__name__" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "job" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "instance" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "context_name" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "context_path" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "servlet_name" },
+            "properties": [{ "id": "displayName", "value": "Servlet Name" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "servlet_patterns" },
+            "properties": [{ "id": "displayName", "value": "URL Patterns" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "servlet_async_supported" },
+            "properties": [{ "id": "displayName", "value": "Async" }]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Servlet Name", "desc": false }]
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_servlet_info{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "",
+        "refId": "A",
+        "instant": true,
+        "format": "table"
+      }],
+      "transformations": [
+        { "id": "groupBy", "options": { "fields": {} } }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Filters in $context_name",
+      "id": 120,
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Time" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "osgi_service_id" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "__name__" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "job" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "instance" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "context_name" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "context_path" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "filter_name" },
+            "properties": [{ "id": "displayName", "value": "Filter Name" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "filter_patterns" },
+            "properties": [{ "id": "displayName", "value": "URL Patterns" }]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Filter Name", "desc": false }]
+      },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_filter_info{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "",
+        "refId": "A",
+        "instant": true,
+        "format": "table"
+      }]
+    },
+    {
+      "type": "table",
+      "title": "Listeners in $context_name",
+      "id": 130,
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 23 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Time" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "osgi_service_id" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "__name__" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "job" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "instance" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "context_name" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "context_path" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "listener_types" },
+            "properties": [{ "id": "displayName", "value": "Listener Types" }]
+          }
+        ]
+      },
+      "options": { "showHeader": true },
+      "targets": [{
+        "expr": "osgi_http_whiteboard_listener_info{job=~\"$instance\", context_name=\"$context_name\"}",
+        "legendFormat": "",
+        "refId": "A",
+        "instant": true,
+        "format": "table"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Servlet & Filter Counts Over Time — $context_name",
+      "id": 140,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": true,
+            "lineInterpolation": "smooth",
+            "showPoints": "never"
+          },
+          "thresholds": { "steps": [{ "color": "green", "value": null }] }
+        }
+      },
+      "options": {
+        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "osgi_http_whiteboard_servlets{job=~\"$instance\", context_name=\"$context_name\"}",
+          "legendFormat": "Servlets",
+          "refId": "A"
+        },
+        {
+          "expr": "osgi_http_whiteboard_filters{job=~\"$instance\", context_name=\"$context_name\"}",
+          "legendFormat": "Filters",
+          "refId": "B"
+        },
+        {
+          "expr": "osgi_http_whiteboard_listeners{job=~\"$instance\", context_name=\"$context_name\"}",
+          "legendFormat": "Listeners",
+          "refId": "C"
+        },
+        {
+          "expr": "osgi_http_whiteboard_resources{job=~\"$instance\", context_name=\"$context_name\"}",
+          "legendFormat": "Resources",
+          "refId": "D"
+        },
+        {
+          "expr": "osgi_http_whiteboard_error_pages{job=~\"$instance\", context_name=\"$context_name\"}",
+          "legendFormat": "Error Pages",
+          "refId": "E"
+        }
+      ]
+    }
+  ]
+}

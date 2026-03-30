@@ -37,7 +37,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class FrameworkMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(FrameworkMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.framework";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.framework";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

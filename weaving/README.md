@@ -27,17 +27,17 @@ OpenTelemetryWeavingHook.weave(WovenClass)
 
 | Module | Target | Details |
 |---|---|---|
-| [opentelemetry-osgi-weaving](opentelemetry-osgi-weaving/README.md) | Host bundle: WeavingHook, WeaverRegistry, OpenTelemetryProxy, ASM embedded | [Read more →](opentelemetry-osgi-weaving/README.md) |
-| [opentelemetry-osgi-weaver-servlet](opentelemetry-osgi-weaver-servlet/README.md) | `HttpServlet` subclasses — HTTP request tracing and metrics | [Read more →](opentelemetry-osgi-weaver-servlet/README.md) |
-| [opentelemetry-osgi-weaver-jdbc](opentelemetry-osgi-weaver-jdbc/README.md) | JDBC `Statement` implementations — database operation tracing | [Read more →](opentelemetry-osgi-weaver-jdbc/README.md) |
-| [opentelemetry-osgi-weaver-jaxrs](opentelemetry-osgi-weaver-jaxrs/README.md) | `@Path`-annotated JAX-RS resources — REST endpoint tracing | [Read more →](opentelemetry-osgi-weaver-jaxrs/README.md) |
-| [opentelemetry-osgi-weaver-scr](opentelemetry-osgi-weaver-scr/README.md) | DS component lifecycle methods — activate/deactivate/modified tracing | [Read more →](opentelemetry-osgi-weaver-scr/README.md) |
+| [hook](hook/README.md) | Host bundle: WeavingHook, WeaverRegistry, OpenTelemetryProxy, ASM embedded | [Read more](hook/README.md) |
+| [jakarta.servlet](jakarta.servlet/README.md) | `HttpServlet` subclasses — HTTP request tracing and metrics | [Read more](jakarta.servlet/README.md) |
+| [jakarta.rest](jakarta.rest/README.md) | `@Path`-annotated JAX-RS resources — REST endpoint tracing | [Read more](jakarta.rest/README.md) |
+| [jdbc](jdbc/README.md) | JDBC `Statement` implementations — database operation tracing | [Read more](jdbc/README.md) |
+| [scr](scr/README.md) | DS component lifecycle methods — activate/deactivate/modified tracing | [Read more](scr/README.md) |
 
 Each module README contains instrumented methods, generated telemetry tables, and component descriptions.
 
 ## Adding New Weavers
 
-1. Create a new module as a fragment bundle (`Fragment-Host: opentelemetry-osgi-weaving`)
+1. Create a new module as a fragment bundle (`Fragment-Host: org.eclipse.osgi-technology.opentelemetry.weaving.hook`)
 2. Implement the `Weaver` interface: `name()`, `canWeave()`, `weave()`
 3. Use `SafeClassWriter` (from the host) instead of plain `ClassWriter`
 4. Register via `META-INF/services/org.eclipse.osgi.technology.opentelemetry.weaving.Weaver`

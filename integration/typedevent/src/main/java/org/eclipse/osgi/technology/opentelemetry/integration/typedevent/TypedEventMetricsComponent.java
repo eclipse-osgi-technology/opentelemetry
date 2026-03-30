@@ -38,7 +38,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class TypedEventMetricsComponent implements UntypedEventHandler {
 
     private static final Logger LOG = Logger.getLogger(TypedEventMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.typedevent";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.typedevent";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

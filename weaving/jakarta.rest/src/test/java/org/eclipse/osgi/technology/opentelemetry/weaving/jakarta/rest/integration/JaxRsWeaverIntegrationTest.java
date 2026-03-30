@@ -31,85 +31,70 @@ import org.eclipse.osgi.technology.opentelemetry.weaving.jakarta.rest.test.TestR
 
 public class JaxRsWeaverIntegrationTest {
 
-    @InjectBundleContext
-    BundleContext context;
+	@InjectBundleContext
+	BundleContext context;
 
-    private final List<SpanData> exportedSpans = new CopyOnWriteArrayList<>();
-    private SdkTracerProvider tracerProvider;
-    private ServiceRegistration<OpenTelemetry> otelRegistration;
+	private final List<SpanData> exportedSpans = new CopyOnWriteArrayList<>();
+	private SdkTracerProvider tracerProvider;
+	private ServiceRegistration<OpenTelemetry> otelRegistration;
 
-    @BeforeEach
-    void setUp() {
-        SpanExporter testExporter = new SpanExporter() {
-            @Override
-            public CompletableResultCode export(Collection<SpanData> spans) {
-                exportedSpans.addAll(spans);
-                return CompletableResultCode.ofSuccess();
-            }
+	@BeforeEach
+	void setUp() {
+		SpanExporter testExporter = new SpanExporter() {
+			@Override
+			public CompletableResultCode export(Collection<SpanData> spans) {
+				exportedSpans.addAll(spans);
+				return CompletableResultCode.ofSuccess();
+			}
 
-            @Override
-            public CompletableResultCode flush() {
-                return CompletableResultCode.ofSuccess();
-            }
+			@Override
+			public CompletableResultCode flush() {
+				return CompletableResultCode.ofSuccess();
+			}
 
-            @Override
-            public CompletableResultCode shutdown() {
-                return CompletableResultCode.ofSuccess();
-            }
-        };
+			@Override
+			public CompletableResultCode shutdown() {
+				return CompletableResultCode.ofSuccess();
+			}
+		};
 
-        tracerProvider = SdkTracerProvider.builder()
-                .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
-                .build();
+		tracerProvider = SdkTracerProvider.builder().addSpanProcessor(SimpleSpanProcessor.create(testExporter)).build();
 
-        OpenTelemetrySdk sdk = OpenTelemetrySdk.builder()
-                .setTracerProvider(tracerProvider)
-                .build();
+		OpenTelemetrySdk sdk = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
 
-        Dictionary<String, Object> otelProps = new Hashtable<>();
-        otelProps.put(org.osgi.framework.Constants.SERVICE_RANKING, Integer.MAX_VALUE);
-        otelRegistration = context.registerService(OpenTelemetry.class, sdk, otelProps);
-    }
+		Dictionary<String, Object> otelProps = new Hashtable<>();
+		otelProps.put(org.osgi.framework.Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+		otelRegistration = context.registerService(OpenTelemetry.class, sdk, otelProps);
+	}
 
-    @AfterEach
-    void tearDown() {
-        if (otelRegistration != null) {
-            otelRegistration.unregister();
-        }
-        if (tracerProvider != null) {
-            tracerProvider.close();
-        }
-        exportedSpans.clear();
-    }
+	@AfterEach
+	void tearDown() {
+		if (otelRegistration != null) {
+			otelRegistration.unregister();
+		}
+		if (tracerProvider != null) {
+			tracerProvider.close();
+		}
+		exportedSpans.clear();
+	}
 
-    @Test
-    void jaxRsResourceMethodCreatesSpan() {
-        // Instantiate and call the woven resource method directly.
-        // The weaving hook instruments classes with @Path at class load time,
-        // injecting span creation around @GET methods.
-        TestResource resource = new TestResource();
-        resource.hello();
+	@Test
+	void jaxRsResourceMethodCreatesSpan() {
 
-        tracerProvider.forceFlush().join(5000, TimeUnit.MILLISECONDS);
+		TestResource resource = new TestResource();
+		resource.hello();
 
-        assertThat(exportedSpans).isNotEmpty();
+		tracerProvider.forceFlush().join(5000, TimeUnit.MILLISECONDS);
 
-        SpanData span = exportedSpans.stream()
-                .filter(s -> s.getName().contains("/test"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No span found containing '/test'. Spans: " + exportedSpans));
+		assertThat(exportedSpans).isNotEmpty();
 
-        assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
-        assertThat(span.getAttributes().get(
-                AttributeKey.stringKey("http.method"))).isEqualTo("GET");
-        assertThat(span.getAttributes().get(
-                AttributeKey.stringKey("http.route"))).isEqualTo("/test");
-        assertThat(span.getAttributes().get(
-                AttributeKey.stringKey("jaxrs.resource.class")))
-                .contains("TestResource");
-        assertThat(span.getAttributes().get(
-                AttributeKey.stringKey("jaxrs.resource.method")))
-                .isEqualTo("hello");
-    }
+		SpanData span = exportedSpans.stream().filter(s -> s.getName().contains("/test")).findFirst()
+				.orElseThrow(() -> new AssertionError("No span found containing '/test'. Spans: " + exportedSpans));
+
+		assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
+		assertThat(span.getAttributes().get(AttributeKey.stringKey("http.method"))).isEqualTo("GET");
+		assertThat(span.getAttributes().get(AttributeKey.stringKey("http.route"))).isEqualTo("/test");
+		assertThat(span.getAttributes().get(AttributeKey.stringKey("jaxrs.resource.class"))).contains("TestResource");
+		assertThat(span.getAttributes().get(AttributeKey.stringKey("jaxrs.resource.method"))).isEqualTo("hello");
+	}
 }

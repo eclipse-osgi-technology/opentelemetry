@@ -1,12 +1,14 @@
 # OpenTelemetry OSGi Core
 
-This folder contains the core runtime module that provides the OpenTelemetry SDK as an OSGi service.
+This folder contains the core runtime modules that provide the OpenTelemetry SDK as an OSGi service.
 
 ## Modules
 
 | Module | Description | Details |
 |---|---|---|
-| [opentelemetry-osgi-runtime](opentelemetry-osgi-runtime/README.md) | OpenTelemetry SDK lifecycle, service publishing, OTLP/HTTP export | [Read more →](opentelemetry-osgi-runtime/README.md) |
+| [commons](commons/) | Shared base classes and provider registration for `TracerProvider`, `MeterProvider`, `LoggerProvider`, `ContextPropagators` | [Read more](commons/) |
+| [sender.http](sender.http/) | OTLP/HTTP exporter with batch processing, compression, and mTLS support | [Read more](sender.http/) |
+| [sender.logging](sender.logging/) | Logging exporter (stdout via java.util.logging) for development/debugging | [Read more](sender.logging/) |
 
-The runtime publishes `io.opentelemetry.api.OpenTelemetry` and individual provider interfaces (`TracerProvider`, `MeterProvider`, `LoggerProvider`, `ContextPropagators`) to the OSGi service registry.
-See the [module README](opentelemetry-osgi-runtime/README.md) for configuration details.
+The sender modules publish `io.opentelemetry.api.OpenTelemetry` and individual provider interfaces (`TracerProvider`, `MeterProvider`, `LoggerProvider`, `ContextPropagators`) to the OSGi service registry.
+The `sender.http` exporter has a higher service ranking (100) than `sender.logging` (0), so it is preferred when both are configured.

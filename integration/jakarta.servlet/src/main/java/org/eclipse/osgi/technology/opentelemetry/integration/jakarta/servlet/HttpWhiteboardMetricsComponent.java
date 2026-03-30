@@ -12,8 +12,12 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.servlet.runtime.HttpServiceRuntime;
+import org.osgi.service.servlet.runtime.dto.FilterDTO;
+import org.osgi.service.servlet.runtime.dto.ListenerDTO;
+import org.osgi.service.servlet.runtime.dto.ResourceDTO;
 import org.osgi.service.servlet.runtime.dto.RuntimeDTO;
 import org.osgi.service.servlet.runtime.dto.ServletContextDTO;
+import org.osgi.service.servlet.runtime.dto.ServletDTO;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -40,7 +44,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class HttpWhiteboardMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(HttpWhiteboardMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.servlet";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.jakarta.servlet";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
@@ -182,9 +186,94 @@ public class HttpWhiteboardMetricsComponent {
                 }
             });
 
+        ObservableLongGauge servletInfoGauge = meter.gaugeBuilder("osgi.http.whiteboard.servlet.info")
+            .setDescription("Per-servlet metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    if (dto.servletContextDTOs != null) {
+                        for (ServletContextDTO ctx : dto.servletContextDTOs) {
+                            if (ctx.servletDTOs != null) {
+                                for (ServletDTO servlet : ctx.servletDTOs) {
+                                    measurement.record(1, servletAttributes(ctx, servlet, serviceId));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read servlet info", e);
+                }
+            });
+
+        ObservableLongGauge filterInfoGauge = meter.gaugeBuilder("osgi.http.whiteboard.filter.info")
+            .setDescription("Per-filter metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    if (dto.servletContextDTOs != null) {
+                        for (ServletContextDTO ctx : dto.servletContextDTOs) {
+                            if (ctx.filterDTOs != null) {
+                                for (FilterDTO filter : ctx.filterDTOs) {
+                                    measurement.record(1, filterAttributes(ctx, filter, serviceId));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read filter info", e);
+                }
+            });
+
+        ObservableLongGauge listenerInfoGauge = meter.gaugeBuilder("osgi.http.whiteboard.listener.info")
+            .setDescription("Per-listener metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    if (dto.servletContextDTOs != null) {
+                        for (ServletContextDTO ctx : dto.servletContextDTOs) {
+                            if (ctx.listenerDTOs != null) {
+                                for (ListenerDTO listener : ctx.listenerDTOs) {
+                                    measurement.record(1, listenerAttributes(ctx, listener, serviceId));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read listener info", e);
+                }
+            });
+
+        ObservableLongGauge resourceInfoGauge = meter.gaugeBuilder("osgi.http.whiteboard.resource.info")
+            .setDescription("Per-resource metadata (always 1)")
+            .setUnit("{info}")
+            .ofLongs()
+            .buildWithCallback(measurement -> {
+                try {
+                    RuntimeDTO dto = runtime.getRuntimeDTO();
+                    if (dto.servletContextDTOs != null) {
+                        for (ServletContextDTO ctx : dto.servletContextDTOs) {
+                            if (ctx.resourceDTOs != null) {
+                                for (ResourceDTO resource : ctx.resourceDTOs) {
+                                    measurement.record(1, resourceAttributes(ctx, resource, serviceId));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.log(Level.FINE, "Failed to read resource info", e);
+                }
+            });
+
         HttpWhiteboardMetricsState state = new HttpWhiteboardMetricsState(serviceId,
             contextsGauge, servletsGauge, filtersGauge, listenersGauge,
-            resourcesGauge, errorPagesGauge, failedGauge);
+            resourcesGauge, errorPagesGauge, failedGauge,
+            servletInfoGauge, filterInfoGauge, listenerInfoGauge, resourceInfoGauge);
         services.put(runtime, state);
         LOG.info("Bound HttpServiceRuntime (service.id=" + serviceId + ") — HTTP Whiteboard metrics registered");
     }
@@ -212,5 +301,55 @@ public class HttpWhiteboardMetricsComponent {
             .put(AttributeKey.stringKey("context.path"), ctx.contextPath != null ? ctx.contextPath : "/")
             .put(SERVICE_ID_KEY, serviceId)
             .build();
+    }
+
+    private static Attributes servletAttributes(ServletContextDTO ctx, ServletDTO servlet, long serviceId) {
+        return Attributes.builder()
+            .put(AttributeKey.stringKey("context.name"), ctx.name != null ? ctx.name : "unknown")
+            .put(AttributeKey.stringKey("context.path"), ctx.contextPath != null ? ctx.contextPath : "/")
+            .put(AttributeKey.stringKey("servlet.name"), servlet.name != null ? servlet.name : "unknown")
+            .put(AttributeKey.stringKey("servlet.patterns"), joinPatterns(servlet.patterns))
+            .put(AttributeKey.booleanKey("servlet.async.supported"), servlet.asyncSupported)
+            .put(SERVICE_ID_KEY, serviceId)
+            .build();
+    }
+
+    private static Attributes filterAttributes(ServletContextDTO ctx, FilterDTO filter, long serviceId) {
+        return Attributes.builder()
+            .put(AttributeKey.stringKey("context.name"), ctx.name != null ? ctx.name : "unknown")
+            .put(AttributeKey.stringKey("context.path"), ctx.contextPath != null ? ctx.contextPath : "/")
+            .put(AttributeKey.stringKey("filter.name"), filter.name != null ? filter.name : "unknown")
+            .put(AttributeKey.stringKey("filter.patterns"), joinPatterns(filter.patterns))
+            .put(SERVICE_ID_KEY, serviceId)
+            .build();
+    }
+
+    private static Attributes listenerAttributes(ServletContextDTO ctx, ListenerDTO listener, long serviceId) {
+        return Attributes.builder()
+            .put(AttributeKey.stringKey("context.name"), ctx.name != null ? ctx.name : "unknown")
+            .put(AttributeKey.stringKey("context.path"), ctx.contextPath != null ? ctx.contextPath : "/")
+            .put(AttributeKey.stringKey("listener.types"), joinTypes(listener.types))
+            .put(SERVICE_ID_KEY, serviceId)
+            .build();
+    }
+
+    private static Attributes resourceAttributes(ServletContextDTO ctx, ResourceDTO resource, long serviceId) {
+        return Attributes.builder()
+            .put(AttributeKey.stringKey("context.name"), ctx.name != null ? ctx.name : "unknown")
+            .put(AttributeKey.stringKey("context.path"), ctx.contextPath != null ? ctx.contextPath : "/")
+            .put(AttributeKey.stringKey("resource.patterns"), joinPatterns(resource.patterns))
+            .put(AttributeKey.stringKey("resource.prefix"), resource.prefix != null ? resource.prefix : "")
+            .put(SERVICE_ID_KEY, serviceId)
+            .build();
+    }
+
+    private static String joinPatterns(String[] patterns) {
+        if (patterns == null || patterns.length == 0) return "";
+        return String.join(", ", patterns);
+    }
+
+    private static String joinTypes(String[] types) {
+        if (types == null || types.length == 0) return "";
+        return String.join(", ", types);
     }
 }

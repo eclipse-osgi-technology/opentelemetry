@@ -45,7 +45,7 @@ import io.opentelemetry.context.Scope;
 public class HealthCheckTracingComponent {
 
     private static final Logger LOG = Logger.getLogger(HealthCheckTracingComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.healthcheck.tracing";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.healthcheck";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)

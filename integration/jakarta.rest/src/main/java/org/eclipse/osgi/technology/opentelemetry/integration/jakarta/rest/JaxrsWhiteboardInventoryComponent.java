@@ -44,7 +44,7 @@ import io.opentelemetry.api.logs.Severity;
 public class JaxrsWhiteboardInventoryComponent {
 
     private static final Logger LOG = Logger.getLogger(JaxrsWhiteboardInventoryComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.jaxrs.inventory";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.jakarta.rest";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

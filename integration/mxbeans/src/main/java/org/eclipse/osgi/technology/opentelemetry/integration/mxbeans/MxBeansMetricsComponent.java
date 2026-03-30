@@ -49,7 +49,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class MxBeansMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(MxBeansMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.mxbeans";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.mxbeans";
 
     private static final AttributeKey<String> AREA_KEY = AttributeKey.stringKey("jvm.memory.area");
     private static final AttributeKey<String> GC_NAME_KEY = AttributeKey.stringKey("jvm.gc.name");

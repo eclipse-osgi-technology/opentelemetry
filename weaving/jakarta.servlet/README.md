@@ -1,6 +1,6 @@
 # OpenTelemetry Servlet Weaver
 
-A fragment bundle attaching to the [weaving host](../opentelemetry-osgi-weaving/README.md) that instruments `javax.servlet.http.HttpServlet` subclasses at class-load time.
+A fragment bundle attaching to the [weaving host](../hook/README.md) that instruments `javax.servlet.http.HttpServlet` subclasses at class-load time.
 Skips `javax.servlet.*` classes themselves.
 
 ## Instrumented Methods

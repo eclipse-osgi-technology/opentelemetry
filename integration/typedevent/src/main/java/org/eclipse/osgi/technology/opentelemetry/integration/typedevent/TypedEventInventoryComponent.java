@@ -33,7 +33,7 @@ import io.opentelemetry.api.logs.Severity;
 public class TypedEventInventoryComponent {
 
     private static final Logger LOG = Logger.getLogger(TypedEventInventoryComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.typedevent.inventory";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.typedevent";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

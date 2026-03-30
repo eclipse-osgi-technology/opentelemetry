@@ -255,7 +255,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.osgi-technology.opentelemetry</groupId>
-			<artifactId>org.eclipse.osgi-technology.opentelemetry.core.sender.log</artifactId>
+			<artifactId>org.eclipse.osgi-technology.opentelemetry.core.sender.logging</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>

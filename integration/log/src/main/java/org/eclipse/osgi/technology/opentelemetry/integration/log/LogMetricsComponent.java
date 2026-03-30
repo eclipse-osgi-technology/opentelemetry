@@ -37,7 +37,7 @@ import io.opentelemetry.api.metrics.Meter;
 public class LogMetricsComponent implements LogListener {
 
     private static final Logger LOG = Logger.getLogger(LogMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.log.metrics";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.log";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

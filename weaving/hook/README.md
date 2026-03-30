@@ -1,7 +1,7 @@
 # OpenTelemetry OSGi Weaving Host
 
 The host bundle providing the OSGi WeavingHook based bytecode instrumentation infrastructure.
-It uses [ASM 9.7.1](https://asm.ow2.io/) (embedded as `Private-Package`) for bytecode manipulation and the [OSGi WeavingHook](https://docs.osgi.org/specification/osgi.core/8.0.0/framework.weavinghook.html) mechanism for class-load-time transformation.
+It uses [ASM 9.9](https://asm.ow2.io/) (embedded as `Private-Package`) for bytecode manipulation and the [OSGi WeavingHook](https://docs.osgi.org/specification/osgi.core/8.0.0/framework.weavinghook.html) mechanism for class-load-time transformation.
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Felix, Karaf, Jetty, Pax, Aries, CXF, XBean, and Eclipse Equinox.
 
 ## ASM Embedding
 
-ASM 9.7.1 is included via `Private-Package` in the bundle manifest.
+ASM 9.9 is included via `Private-Package` in the bundle manifest.
 This avoids resolution ordering and classloader visibility issues that would arise from a separate ASM bundle.
 
 ## Weaver SPI

@@ -53,8 +53,8 @@ This integration uses the pre-Jakarta HTTP Whiteboard API (`org.osgi.service.htt
 
 ```xml
 <dependency>
-    <groupId>org.eclipse.osgi-technology</groupId>
-    <artifactId>opentelemetry-osgi-http-whiteboard</artifactId>
+    <groupId>org.eclipse.osgi-technology.opentelemetry</groupId>
+    <artifactId>org.eclipse.osgi-technology.opentelemetry.integration.jakarta.servlet</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```

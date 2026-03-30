@@ -60,8 +60,8 @@ This integration uses the pre-Jakarta JAX-RS Whiteboard API (`org.osgi.service.j
 
 ```xml
 <dependency>
-    <groupId>org.eclipse.osgi-technology</groupId>
-    <artifactId>opentelemetry-osgi-jaxrs-whiteboard</artifactId>
+    <groupId>org.eclipse.osgi-technology.opentelemetry</groupId>
+    <artifactId>org.eclipse.osgi-technology.opentelemetry.integration.jakarta.rest</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```

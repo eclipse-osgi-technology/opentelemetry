@@ -47,7 +47,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class HealthCheckMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(HealthCheckMetricsComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.healthcheck";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.healthcheck";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)

@@ -47,7 +47,7 @@ import io.opentelemetry.api.logs.Severity;
 public class LogBridgeComponent implements LogListener {
 
     private static final Logger LOG = Logger.getLogger(LogBridgeComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.log";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.log";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

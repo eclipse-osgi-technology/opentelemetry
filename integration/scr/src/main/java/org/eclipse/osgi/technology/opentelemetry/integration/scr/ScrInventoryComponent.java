@@ -44,7 +44,7 @@ import io.opentelemetry.api.logs.Severity;
 public class ScrInventoryComponent {
 
     private static final Logger LOG = Logger.getLogger(ScrInventoryComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.scr.inventory";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.scr";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
     @Reference(policy = ReferencePolicy.DYNAMIC)

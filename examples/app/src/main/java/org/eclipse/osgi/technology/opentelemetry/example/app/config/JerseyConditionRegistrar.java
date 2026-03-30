@@ -11,25 +11,25 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.condition.Condition;
 
 /**
- * Registers the {@code jersey.runtime} Condition service that the
- * Eclipse OSGiTech REST Whiteboard components require to activate.
+ * Registers the {@code jersey.runtime} Condition service that the Eclipse
+ * OSGiTech REST Whiteboard components require to activate.
  */
 @Component(immediate = true)
 public class JerseyConditionRegistrar {
 
-    private ServiceRegistration<Condition> registration;
+	private ServiceRegistration<Condition> registration;
 
-    @Activate
-    void activate(BundleContext ctx) {
-        Dictionary<String, Object> props = new Hashtable<>();
-        props.put(Condition.CONDITION_ID, "jersey.runtime");
-        registration = ctx.registerService(Condition.class, Condition.INSTANCE, props);
-    }
+	@Activate
+	void activate(BundleContext ctx) {
+		Dictionary<String, Object> props = new Hashtable<>();
+		props.put(Condition.CONDITION_ID, "jersey.runtime");
+		registration = ctx.registerService(Condition.class, Condition.INSTANCE, props);
+	}
 
-    @Deactivate
-    void deactivate() {
-        if (registration != null) {
-            registration.unregister();
-        }
-    }
+	@Deactivate
+	void deactivate() {
+		if (registration != null) {
+			registration.unregister();
+		}
+	}
 }

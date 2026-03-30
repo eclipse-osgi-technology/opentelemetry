@@ -42,7 +42,7 @@ import io.opentelemetry.api.logs.Severity;
 public class BundleInventoryComponent implements SynchronousBundleListener {
 
     private static final Logger LOG = Logger.getLogger(BundleInventoryComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.framework.inventory.bundle";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.framework";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

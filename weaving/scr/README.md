@@ -1,6 +1,6 @@
 # OpenTelemetry SCR Lifecycle Weaver
 
-A fragment bundle attaching to the [weaving host](../opentelemetry-osgi-weaving/README.md) that instruments Declarative Services component lifecycle methods at class-load time.
+A fragment bundle attaching to the [weaving host](../hook/README.md) that instruments Declarative Services component lifecycle methods at class-load time.
 Inspired by [biz.aQute.trace](https://github.com/aQute-os/biz.aQute.osgi.util).
 
 ## Detection

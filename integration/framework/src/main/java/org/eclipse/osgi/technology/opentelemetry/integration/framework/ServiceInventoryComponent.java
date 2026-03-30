@@ -45,7 +45,7 @@ import io.opentelemetry.api.logs.Severity;
 public class ServiceInventoryComponent implements ServiceListener {
 
     private static final Logger LOG = Logger.getLogger(ServiceInventoryComponent.class.getName());
-    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.framework.inventory.service";
+    private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.framework";
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
     private volatile OpenTelemetry openTelemetry;

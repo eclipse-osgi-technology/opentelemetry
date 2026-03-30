@@ -35,104 +35,86 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-@WithConfiguration(
-    pid = "org.apache.felix.http",
-    properties = {
-        @Property(key = "org.osgi.service.http.port", value = "9999", scalar = Property.Scalar.Integer)
-    }
-)
+@WithConfiguration(pid = "org.apache.felix.http", properties = {
+		@Property(key = "org.osgi.service.http.port", value = "9999", scalar = Property.Scalar.Integer) })
 public class ServletWeaverIntegrationTest {
 
-    @InjectBundleContext
-    BundleContext context;
+	@InjectBundleContext
+	BundleContext context;
 
-    private final List<SpanData> exportedSpans = new CopyOnWriteArrayList<>();
-    private SdkTracerProvider tracerProvider;
-    private ServiceRegistration<OpenTelemetry> otelRegistration;
+	private final List<SpanData> exportedSpans = new CopyOnWriteArrayList<>();
+	private SdkTracerProvider tracerProvider;
+	private ServiceRegistration<OpenTelemetry> otelRegistration;
 
-    @BeforeEach
-    void setUp() {
-        SpanExporter testExporter = new SpanExporter() {
-            @Override
-            public CompletableResultCode export(Collection<SpanData> spans) {
-                exportedSpans.addAll(spans);
-                return CompletableResultCode.ofSuccess();
-            }
+	@BeforeEach
+	void setUp() {
+		SpanExporter testExporter = new SpanExporter() {
+			@Override
+			public CompletableResultCode export(Collection<SpanData> spans) {
+				exportedSpans.addAll(spans);
+				return CompletableResultCode.ofSuccess();
+			}
 
-            @Override
-            public CompletableResultCode flush() {
-                return CompletableResultCode.ofSuccess();
-            }
+			@Override
+			public CompletableResultCode flush() {
+				return CompletableResultCode.ofSuccess();
+			}
 
-            @Override
-            public CompletableResultCode shutdown() {
-                return CompletableResultCode.ofSuccess();
-            }
-        };
+			@Override
+			public CompletableResultCode shutdown() {
+				return CompletableResultCode.ofSuccess();
+			}
+		};
 
-        tracerProvider = SdkTracerProvider.builder()
-                .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
-                .build();
+		tracerProvider = SdkTracerProvider.builder().addSpanProcessor(SimpleSpanProcessor.create(testExporter)).build();
 
-        OpenTelemetrySdk sdk = OpenTelemetrySdk.builder()
-                .setTracerProvider(tracerProvider)
-                .build();
+		OpenTelemetrySdk sdk = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
 
-        Dictionary<String, Object> otelProps = new Hashtable<>();
-        otelProps.put(org.osgi.framework.Constants.SERVICE_RANKING, Integer.MAX_VALUE);
-        otelRegistration = context.registerService(OpenTelemetry.class, sdk, otelProps);
-    }
+		Dictionary<String, Object> otelProps = new Hashtable<>();
+		otelProps.put(org.osgi.framework.Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+		otelRegistration = context.registerService(OpenTelemetry.class, sdk, otelProps);
+	}
 
-    @AfterEach
-    void tearDown() {
-        if (otelRegistration != null) {
-            otelRegistration.unregister();
-        }
-        if (tracerProvider != null) {
-            tracerProvider.close();
-        }
-        exportedSpans.clear();
-    }
+	@AfterEach
+	void tearDown() {
+		if (otelRegistration != null) {
+			otelRegistration.unregister();
+		}
+		if (tracerProvider != null) {
+			tracerProvider.close();
+		}
+		exportedSpans.clear();
+	}
 
-    @Test
-    void servletRequestCreatesSpan(
-            @InjectService(timeout = 10000) HttpServiceRuntime runtime) throws Exception {
-        // Get actual endpoint from runtime service
-        ServiceReference<HttpServiceRuntime> runtimeRef =
-                context.getServiceReference(HttpServiceRuntime.class);
-        Object endpoints = runtimeRef.getProperty("osgi.http.endpoint");
-        String endpoint = endpoints instanceof String[]
-                ? ((String[]) endpoints)[0] : String.valueOf(endpoints);
+	@Test
+	void servletRequestCreatesSpan(@InjectService(timeout = 10000) HttpServiceRuntime runtime) throws Exception {
+		// Get actual endpoint from runtime service
+		ServiceReference<HttpServiceRuntime> runtimeRef = context.getServiceReference(HttpServiceRuntime.class);
+		Object endpoints = runtimeRef.getProperty("osgi.http.endpoint");
+		String endpoint = endpoints instanceof String[] ? ((String[]) endpoints)[0] : String.valueOf(endpoints);
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint + "test"))
-                .GET()
-                .build();
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(endpoint + "test")).GET().build();
 
-        // Retry until servlet from test.app bundle is registered
-        HttpResponse<String> response = null;
-        for (int i = 0; i < 20; i++) {
-            Thread.sleep(500);
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                break;
-            }
-        }
-        assertThat(response.statusCode()).isEqualTo(200);
+		// Retry until servlet from test.app bundle is registered
+		HttpResponse<String> response = null;
+		for (int i = 0; i < 20; i++) {
+			Thread.sleep(500);
+			response = client.send(request, HttpResponse.BodyHandlers.ofString());
+			if (response.statusCode() == 200) {
+				break;
+			}
+		}
+		assertThat(response.statusCode()).isEqualTo(200);
 
-        tracerProvider.forceFlush().join(5000, TimeUnit.MILLISECONDS);
+		tracerProvider.forceFlush().join(5000, TimeUnit.MILLISECONDS);
 
-        assertThat(exportedSpans).isNotEmpty();
+		assertThat(exportedSpans).isNotEmpty();
 
-        SpanData span = exportedSpans.stream()
-                .filter(s -> s.getName().contains("/test"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No span found containing '/test'. Spans: " + exportedSpans));
+		SpanData span = exportedSpans.stream().filter(s -> s.getName().contains("/test")).findFirst()
+				.orElseThrow(() -> new AssertionError("No span found containing '/test'. Spans: " + exportedSpans));
 
-        assertThat(span.getKind()).isEqualTo(SpanKind.SERVER);
-        assertThat(span.getAttributes().get(
-                AttributeKey.stringKey("http.method"))).isEqualTo("GET");
-    }
+		assertThat(span.getKind()).isEqualTo(SpanKind.SERVER);
+		assertThat(span.getAttributes().get(AttributeKey.stringKey("http.method"))).isEqualTo("GET");
+	}
 }

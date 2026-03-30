@@ -1,0 +1,435 @@
+{
+  "uid": "jakarta-rest-whiteboard",
+  "title": "Jakarta REST Whiteboard",
+  "description": "OSGi JAX-RS Whiteboard: applications with collapsible resource details, call counts, status codes, durations",
+  "tags": ["osgi", "opentelemetry", "jaxrs", "rest", "whiteboard"],
+  "timezone": "browser",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(osgi_jaxrs_applications, job)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "sort": 1
+      },
+      {
+        "name": "application_name",
+        "label": "Application",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(osgi_jaxrs_resources{job=~\"$instance\"}, application_name)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "sort": 1
+      },
+      {
+        "name": "http_route",
+        "label": "Resource Route",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_INTERNAL\", http_route=~\".+\"}, http_route)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "links": [],
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview",
+      "id": 1,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Applications",
+      "id": 2,
+      "gridPos": { "h": 4, "w": 5, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(osgi_jaxrs_applications{job=~\"$instance\"})", "legendFormat": "apps", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Resources",
+      "id": 3,
+      "gridPos": { "h": 4, "w": 5, "x": 5, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "blue", "value": null }] } } },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(osgi_jaxrs_resources{job=~\"$instance\"})", "legendFormat": "resources", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Extensions",
+      "id": 4,
+      "gridPos": { "h": 4, "w": 5, "x": 10, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "purple", "value": null }] } } },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(osgi_jaxrs_extensions{job=~\"$instance\"})", "legendFormat": "extensions", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Total Methods",
+      "id": 5,
+      "gridPos": { "h": 4, "w": 5, "x": 15, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "orange", "value": null }] } } },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(osgi_jaxrs_resource_methods{job=~\"$instance\"})", "legendFormat": "methods", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Failed",
+      "id": 6,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } } },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(osgi_jaxrs_failed{job=~\"$instance\"})", "legendFormat": "failed", "refId": "A" }]
+    },
+
+    {
+      "type": "row",
+      "title": "Application: $application_name",
+      "id": 100,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": true,
+      "repeat": "application_name",
+      "repeatDirection": "h",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Resources",
+          "id": 101,
+          "gridPos": { "h": 3, "w": 4, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "blue", "value": null }] } } },
+          "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "osgi_jaxrs_resources{job=~\"$instance\", application_name=\"$application_name\"}", "legendFormat": "resources", "refId": "A" }]
+        },
+        {
+          "type": "stat",
+          "title": "Extensions",
+          "id": 102,
+          "gridPos": { "h": 3, "w": 4, "x": 4, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "purple", "value": null }] } } },
+          "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "osgi_jaxrs_extensions{job=~\"$instance\", application_name=\"$application_name\"}", "legendFormat": "extensions", "refId": "A" }]
+        },
+        {
+          "type": "stat",
+          "title": "Resource Methods",
+          "id": 103,
+          "gridPos": { "h": 3, "w": 4, "x": 8, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "orange", "value": null }] } } },
+          "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "osgi_jaxrs_resource_methods{job=~\"$instance\", application_name=\"$application_name\"}", "legendFormat": "methods", "refId": "A" }]
+        },
+        {
+          "type": "table",
+          "title": "Extensions in $application_name",
+          "id": 110,
+          "gridPos": { "h": 5, "w": 24, "x": 0, "y": 9 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "osgi_service_id" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "job" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "instance" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_base" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "otel_scope_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "extension_name" }, "properties": [{ "id": "displayName", "value": "Extension" }] },
+              { "matcher": { "id": "byName", "options": "extension_types" }, "properties": [{ "id": "displayName", "value": "Types" }] }
+            ]
+          },
+          "options": { "showHeader": true, "sortBy": [{ "displayName": "Extension", "desc": false }] },
+          "targets": [{ "expr": "osgi_jaxrs_extension_info{job=~\"$instance\", application_name=\"$application_name\"}", "refId": "A", "instant": true, "format": "table" }]
+        },
+        {
+          "type": "table",
+          "title": "Resources in $application_name",
+          "id": 120,
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 14 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "osgi_service_id" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "job" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "instance" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_base" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "otel_scope_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "resource_name" }, "properties": [{ "id": "displayName", "value": "Resource" }] },
+              { "matcher": { "id": "byName", "options": "resource_method_count" }, "properties": [{ "id": "displayName", "value": "Methods" }] }
+            ]
+          },
+          "options": { "showHeader": true, "sortBy": [{ "displayName": "Resource", "desc": false }] },
+          "targets": [{ "expr": "osgi_jaxrs_resource_info{job=~\"$instance\", application_name=\"$application_name\"}", "refId": "A", "instant": true, "format": "table" }]
+        },
+        {
+          "type": "table",
+          "title": "Resource Methods in $application_name",
+          "id": 130,
+          "gridPos": { "h": 7, "w": 24, "x": 0, "y": 20 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "osgi_service_id" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "job" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "instance" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_base" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "otel_scope_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "resource_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "method_http" }, "properties": [{ "id": "displayName", "value": "HTTP Method" }] },
+              { "matcher": { "id": "byName", "options": "method_path" }, "properties": [{ "id": "displayName", "value": "Path" }] }
+            ]
+          },
+          "options": { "showHeader": true, "sortBy": [{ "displayName": "Path", "desc": false }] },
+          "targets": [{ "expr": "osgi_jaxrs_resource_method_info{job=~\"$instance\", application_name=\"$application_name\"}", "refId": "A", "instant": true, "format": "table" }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Request Rate by Route — $application_name",
+          "id": 140,
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "fillOpacity": 20, "lineWidth": 2, "spanNulls": true, "lineInterpolation": "smooth", "showPoints": "never", "stacking": { "mode": "normal" } },
+              "unit": "reqps"
+            }
+          },
+          "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "targets": [{
+            "expr": "sum by (http_route, http_method) (rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_INTERNAL\", http_route=~\".+\"}[5m]))",
+            "legendFormat": "{{http_method}} {{http_route}}",
+            "refId": "A"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Request Duration p50/p95/p99 — $application_name",
+          "id": 141,
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "fillOpacity": 10, "lineWidth": 2, "spanNulls": true },
+              "unit": "s"
+            }
+          },
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=~\".+\"}[5m])))", "legendFormat": "p50", "refId": "A" },
+            { "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=~\".+\"}[5m])))", "legendFormat": "p95", "refId": "B" },
+            { "expr": "histogram_quantile(0.99, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=~\".+\"}[5m])))", "legendFormat": "p99", "refId": "C" }
+          ]
+        },
+        {
+          "type": "piechart",
+          "title": "Status Code Distribution — $application_name",
+          "id": 150,
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 35 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
+          "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "tooltip": { "mode": "single" }, "pieType": "donut", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{
+            "expr": "sum by (http_status_code) (increase(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\", http_status_code=~\".+\"}[1h]))",
+            "legendFormat": "{{http_status_code}}",
+            "refId": "A"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Status Codes Over Time — $application_name",
+          "id": 151,
+          "gridPos": { "h": 8, "w": 16, "x": 8, "y": 35 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "fillOpacity": 30, "lineWidth": 1, "spanNulls": true, "stacking": { "mode": "normal" } },
+              "unit": "reqps"
+            }
+          },
+          "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "targets": [{
+            "expr": "sum by (http_status_code) (rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\", http_status_code=~\".+\"}[5m]))",
+            "legendFormat": "{{http_status_code}}",
+            "refId": "A"
+          }]
+        },
+        {
+          "type": "heatmap",
+          "title": "Request Duration Heatmap — $application_name",
+          "id": 160,
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 43 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "s" } },
+          "options": {
+            "calculate": false,
+            "color": { "mode": "scheme", "scheme": "Oranges" },
+            "yAxis": { "unit": "s" },
+            "tooltip": { "show": true }
+          },
+          "targets": [{
+            "expr": "sum(increase(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=~\".+\"}[5m])) by (le)",
+            "legendFormat": "{{le}}",
+            "refId": "A",
+            "format": "heatmap"
+          }]
+        }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "Resource Route: $http_route",
+      "id": 200,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 100 },
+      "collapsed": true,
+      "repeat": "http_route",
+      "repeatDirection": "h",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total Calls",
+          "id": 201,
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 101 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "blue", "value": null }] }, "unit": "short" } },
+          "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "sum(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"})", "legendFormat": "calls", "refId": "A" }]
+        },
+        {
+          "type": "stat",
+          "title": "Rate / sec",
+          "id": 202,
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 101 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": null }] }, "unit": "reqps" } },
+          "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "sum(rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m]))", "legendFormat": "rate", "refId": "A" }]
+        },
+        {
+          "type": "stat",
+          "title": "Avg Duration",
+          "id": 203,
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 101 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "orange", "value": null }] }, "unit": "s" } },
+          "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "sum(rate(traces_spanmetrics_latency_sum{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m])) / sum(rate(traces_spanmetrics_latency_count{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m]))", "legendFormat": "avg", "refId": "A" }]
+        },
+        {
+          "type": "stat",
+          "title": "P99 Duration",
+          "id": 204,
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 101 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "red", "value": null }] }, "unit": "s" } },
+          "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [{ "expr": "histogram_quantile(0.99, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m])))", "legendFormat": "p99", "refId": "A" }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Calls by HTTP Method — $http_route",
+          "id": 210,
+          "gridPos": { "h": 7, "w": 12, "x": 0, "y": 105 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 20, "lineWidth": 2, "spanNulls": true, "stacking": { "mode": "normal" } }, "unit": "reqps" }
+          },
+          "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [{
+            "expr": "sum by (http_method) (rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m]))",
+            "legendFormat": "{{http_method}}",
+            "refId": "A"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Duration Percentiles — $http_route",
+          "id": 211,
+          "gridPos": { "h": 7, "w": 12, "x": 12, "y": 105 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 10, "lineWidth": 2, "spanNulls": true }, "unit": "s" } },
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m])))", "legendFormat": "p50", "refId": "A" },
+            { "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m])))", "legendFormat": "p95", "refId": "B" },
+            { "expr": "histogram_quantile(0.99, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_INTERNAL\", http_route=\"$http_route\"}[5m])))", "legendFormat": "p99", "refId": "C" }
+          ]
+        },
+        {
+          "type": "table",
+          "title": "Methods for $http_route",
+          "id": 220,
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 112 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "application_base" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "otel_scope_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "osgi_service_id" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "job" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "instance" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "resource_name" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "Value" }, "properties": [{ "id": "custom.hidden", "value": true }] },
+              { "matcher": { "id": "byName", "options": "method_http" }, "properties": [{ "id": "displayName", "value": "HTTP Method" }] },
+              { "matcher": { "id": "byName", "options": "method_path" }, "properties": [{ "id": "displayName", "value": "Path" }] }
+            ]
+          },
+          "options": { "showHeader": true },
+          "targets": [{ "expr": "osgi_jaxrs_resource_method_info{job=~\"$instance\", method_path=\"$http_route\"}", "refId": "A", "instant": true, "format": "table" }]
+        }
+      ]
+    }
+  ]
+}

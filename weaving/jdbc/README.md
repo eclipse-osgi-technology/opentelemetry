@@ -1,6 +1,6 @@
 # OpenTelemetry JDBC Weaver
 
-A fragment bundle attaching to the [weaving host](../opentelemetry-osgi-weaving/README.md) that instruments JDBC `Statement`, `PreparedStatement`, and `CallableStatement` implementations at class-load time.
+A fragment bundle attaching to the [weaving host](../hook/README.md) that instruments JDBC `Statement`, `PreparedStatement`, and `CallableStatement` implementations at class-load time.
 Skips JDBC API classes themselves (packages starting with `java.sql` or `javax.sql`).
 
 ## Instrumented Methods

@@ -15,7 +15,11 @@ record HttpWhiteboardMetricsState(
     ObservableLongGauge listenersGauge,
     ObservableLongGauge resourcesGauge,
     ObservableLongGauge errorPagesGauge,
-    ObservableLongGauge failedGauge
+    ObservableLongGauge failedGauge,
+    ObservableLongGauge servletInfoGauge,
+    ObservableLongGauge filterInfoGauge,
+    ObservableLongGauge listenerInfoGauge,
+    ObservableLongGauge resourceInfoGauge
 ) implements AutoCloseable {
 
     @Override
@@ -27,6 +31,10 @@ record HttpWhiteboardMetricsState(
         closeQuietly(resourcesGauge);
         closeQuietly(errorPagesGauge);
         closeQuietly(failedGauge);
+        closeQuietly(servletInfoGauge);
+        closeQuietly(filterInfoGauge);
+        closeQuietly(listenerInfoGauge);
+        closeQuietly(resourceInfoGauge);
     }
 
     private static void closeQuietly(AutoCloseable closeable) {
