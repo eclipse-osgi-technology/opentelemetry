@@ -23,7 +23,8 @@
 hs_err_pid*
 replay_pid*
 /target/
-*/generated/
+**/generated/
+**/bin/
 
 dependency-reduced-pom.xml
 felix-cache
