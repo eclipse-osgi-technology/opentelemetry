@@ -88,6 +88,7 @@
 		<osgi.service.jaxrs.version>1.0.0</osgi.service.jaxrs.version>
 		<h2.version>2.2.224</h2.version>
 		<bnd.version>7.2.2</bnd.version>
+		<assertj.version>3.27.7</assertj.version>
 	</properties>
 
 	<dependencyManagement>
@@ -264,6 +265,12 @@
 			</dependency>
 
 
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>${assertj.version}</version>
+				<scope>test</scope>
+			</dependency>
 			<dependency>
 				<groupId>com.h2database</groupId>
 				<artifactId>h2</artifactId>
