@@ -14,7 +14,15 @@
 
 package org.eclipse.osgi.technology.opentelemetry.integration.typedevent;
 
+import static org.osgi.service.component.annotations.ReferenceCardinality.MULTIPLE;
+import static org.osgi.service.component.annotations.ReferencePolicy.DYNAMIC;
+
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,8 +30,10 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.typedevent.UntypedEventHandler;
+import org.osgi.service.typedevent.monitor.MonitorEvent;
+import org.osgi.service.typedevent.monitor.TypedEventMonitor;
+import org.osgi.util.pushstream.PushStream;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -40,20 +50,49 @@ import io.opentelemetry.context.Scope;
  * to observe every event. Creates a span named {@code osgi.typedevent.deliver}
  * for each event with attributes for the topic and event data fields.
  */
-@Component(immediate = true, service = UntypedEventHandler.class,
-    property = "event.topics=*")
-public class TypedEventTracingComponent implements UntypedEventHandler {
+@Component
+public class TypedEventTracingComponent {
 
     private static final Logger LOG = Logger.getLogger(TypedEventTracingComponent.class.getName());
     private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.typedevent";
     private static final int MAX_DATA_ATTRIBUTES = 20;
 
-    @Reference(policy = ReferencePolicy.DYNAMIC)
-    private volatile OpenTelemetry openTelemetry;
+    private final OpenTelemetry openTelemetry;
+
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final Map<TypedEventMonitor, AutoCloseable> eventCounter = new IdentityHashMap<>();
+
+    @Reference(service = TypedEventMonitor.class,
+    		cardinality = MULTIPLE, policy = DYNAMIC)
+    void addMonitor(TypedEventMonitor monitor) {
+    	PushStream<MonitorEvent> stream = monitor.monitorEvents();
+		stream.forEach(this::processEvent);
+		try {
+			doWithWriteLock(stream, s -> eventCounter.put(monitor, s));
+		} catch (Exception e) {
+			doWithWriteLock(stream, s -> eventCounter.remove(monitor, s));
+			closeQuietly(stream);
+		}
+    }
+    
+    void removeMonitor(TypedEventMonitor monitor) {
+    	closeQuietly(doWithWriteLock(monitor, eventCounter::remove));
+    }
+
+    private <T, R> R doWithWriteLock(T argument, Function<T, R> action) {
+    	Lock writeLock = rwLock.writeLock();
+    	writeLock.lock();
+    	try {
+			return action.apply(argument);
+    	} finally {
+    		writeLock.unlock();
+    	}
+    }
 
     @Activate
-    public void activate() {
-        LOG.info("TypedEventTracingComponent activated — tracing typed events");
+    public TypedEventTracingComponent(@Reference OpenTelemetry ot) {
+    	this.openTelemetry = ot;
+    	LOG.info("TypedEventTracingComponent activated — tracing typed events");
     }
 
     @Deactivate
@@ -61,8 +100,9 @@ public class TypedEventTracingComponent implements UntypedEventHandler {
         LOG.info("TypedEventTracingComponent deactivated");
     }
 
-    @Override
-    public void notifyUntyped(String topic, Map<String, Object> event) {
+    private void processEvent(MonitorEvent me) {
+    	String topic = me.topic;
+    	Map<String,Object> event = me.eventData;
         try {
             Tracer tracer = openTelemetry.getTracer(INSTRUMENTATION_SCOPE, "0.1.0");
 
@@ -100,6 +140,16 @@ public class TypedEventTracingComponent implements UntypedEventHandler {
             }
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Failed to trace typed event", e);
+        }
+    }
+
+    private static void closeQuietly(AutoCloseable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                // ignore
+            }
         }
     }
 }
