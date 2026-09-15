@@ -28,6 +28,16 @@
             <artifactId>org.osgi.service.typedevent</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.util.pushstream</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.util.promise</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- OSGi -->
         <dependency>

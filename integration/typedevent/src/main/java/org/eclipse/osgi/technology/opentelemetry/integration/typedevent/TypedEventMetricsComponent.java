@@ -14,19 +14,31 @@
 
 package org.eclipse.osgi.technology.opentelemetry.integration.typedevent;
 
+import static org.osgi.service.component.annotations.ReferenceCardinality.MULTIPLE;
+import static org.osgi.service.component.annotations.ReferencePolicy.DYNAMIC;
+
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.function.LongSupplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.typedevent.TypedEventHandler;
 import org.osgi.service.typedevent.UntypedEventHandler;
+import org.osgi.service.typedevent.monitor.MonitorEvent;
+import org.osgi.service.typedevent.monitor.TypedEventMonitor;
+import org.osgi.util.pushstream.PushStream;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -47,38 +59,97 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
  *       services by type (typed, untyped)</li>
  * </ul>
  */
-@Component(immediate = true, service = UntypedEventHandler.class,
-    property = "event.topics=*")
-public class TypedEventMetricsComponent implements UntypedEventHandler {
+@Component()
+public class TypedEventMetricsComponent {
 
     private static final Logger LOG = Logger.getLogger(TypedEventMetricsComponent.class.getName());
     private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.typedevent";
 
-    @Reference(policy = ReferencePolicy.DYNAMIC)
-    private volatile OpenTelemetry openTelemetry;
+    private final OpenTelemetry openTelemetry;
 
-    private BundleContext bundleContext;
-    private LongCounter eventCounter;
-    private ObservableLongGauge typedHandlerGauge;
-    private ObservableLongGauge untypedHandlerGauge;
+    private final Meter meter;
+    private final ObservableLongGauge typedHandlerGauge;
+    private final ObservableLongGauge untypedHandlerGauge;
+    
+    
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final Map<TypedEventMonitor, AutoCloseable> eventCounter = new IdentityHashMap<>();
+    private final Set<ServiceReference<?>> typedHandlers = new HashSet<>();
+    private final Set<ServiceReference<?>> untypedHandlers = new HashSet<>();
+
+    @Reference(service = TypedEventMonitor.class,
+    		cardinality = MULTIPLE, policy = DYNAMIC)
+    void addMonitor(TypedEventMonitor monitor) {
+    	LongCounter lc = meter.counterBuilder("osgi.typedevent.events.total")
+                .setDescription("Total number of typed events delivered")
+                .setUnit("{events}")
+                .build();
+    	PushStream<MonitorEvent> stream = monitor.monitorEvents();
+		stream.forEach(e -> processEvent(lc, e));
+		try {
+			doWithWriteLock(stream, s -> eventCounter.put(monitor, s));
+		} catch (Exception e) {
+			doWithWriteLock(stream, s -> eventCounter.remove(monitor, s));
+			closeQuietly(stream);
+		}
+    }
+    
+    void removeMonitor(TypedEventMonitor monitor) {
+    	closeQuietly(doWithWriteLock(monitor, eventCounter::remove));
+    }
+
+    @Reference(service = TypedEventHandler.class,
+    		cardinality = MULTIPLE, policy = DYNAMIC)
+    void addTypedHandler(ServiceReference<TypedEventHandler<?>> ref) {
+    	doWithWriteLock(ref, typedHandlers::add);
+    }
+
+    void removeTypedHandler(ServiceReference<TypedEventHandler<?>> ref) {
+    	doWithWriteLock(ref, typedHandlers::remove);
+    }
+
+    @Reference(service = UntypedEventHandler.class,
+    		cardinality = MULTIPLE, policy = DYNAMIC)
+    void addUntypedHandler(ServiceReference<UntypedEventHandler> ref) {
+    	doWithWriteLock(ref, untypedHandlers::add);
+    }
+    
+    void removeUntypedHandler(ServiceReference<UntypedEventHandler> ref) {
+    	doWithWriteLock(ref, untypedHandlers::remove);
+    }
+
+	private <T, R> R doWithWriteLock(T argument, Function<T, R> action) {
+    	Lock writeLock = rwLock.writeLock();
+    	writeLock.lock();
+    	try {
+			return action.apply(argument);
+    	} finally {
+    		writeLock.unlock();
+    	}
+    }
+
+    private long getWithReadLock(LongSupplier supplier) {
+    	Lock readLock = rwLock.readLock();
+    	readLock.lock();
+    	try {
+    		return supplier.getAsLong();
+    	} finally {
+    		readLock.unlock();
+    	}
+    }
 
     @Activate
-    public void activate(BundleContext ctx) {
-        this.bundleContext = ctx;
+    public TypedEventMetricsComponent(@Reference OpenTelemetry ot) {
+    	this.openTelemetry = ot;
         LOG.info("TypedEventMetricsComponent activated — registering Typed Event metrics");
-        Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE);
-
-        eventCounter = meter.counterBuilder("osgi.typedevent.events.total")
-            .setDescription("Total number of typed events delivered")
-            .setUnit("{events}")
-            .build();
+        meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE);
 
         typedHandlerGauge = meter.gaugeBuilder("osgi.typedevent.handlers.typed")
             .setDescription("Number of registered TypedEventHandler services")
             .setUnit("{handlers}")
             .ofLongs()
             .buildWithCallback(measurement -> {
-                measurement.record(countServices("org.osgi.service.typedevent.TypedEventHandler"));
+                measurement.record(getWithReadLock(typedHandlers::size));
             });
 
         untypedHandlerGauge = meter.gaugeBuilder("osgi.typedevent.handlers.untyped")
@@ -86,7 +157,7 @@ public class TypedEventMetricsComponent implements UntypedEventHandler {
             .setUnit("{handlers}")
             .ofLongs()
             .buildWithCallback(measurement -> {
-                measurement.record(countServices("org.osgi.service.typedevent.UntypedEventHandler"));
+                measurement.record(getWithReadLock(untypedHandlers::size));
             });
 
         LOG.info("TypedEventMetricsComponent — Typed Event metrics registered");
@@ -99,8 +170,8 @@ public class TypedEventMetricsComponent implements UntypedEventHandler {
         LOG.info("TypedEventMetricsComponent deactivated");
     }
 
-    @Override
-    public void notifyUntyped(String topic, Map<String, Object> event) {
+    private void processEvent(LongCounter eventCounter, MonitorEvent event) {
+    	String topic = event.topic;
         try {
             String topicPrefix = extractTopicPrefix(topic);
             eventCounter.add(1, Attributes.of(
@@ -109,16 +180,6 @@ public class TypedEventMetricsComponent implements UntypedEventHandler {
             ));
         } catch (Exception e) {
             LOG.log(Level.FINE, "Failed to record typed event metric", e);
-        }
-    }
-
-    private long countServices(String className) {
-        try {
-            ServiceReference<?>[] refs = bundleContext.getAllServiceReferences(className, null);
-            return refs != null ? refs.length : 0;
-        } catch (InvalidSyntaxException e) {
-            LOG.log(Level.FINE, "Failed to count services: " + className, e);
-            return 0;
         }
     }
 
