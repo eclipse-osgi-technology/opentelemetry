@@ -18,7 +18,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +32,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 
@@ -129,6 +136,52 @@ public abstract class AbstractOpenTelemetryService implements OpenTelemetry {
 			LOG.log(Level.WARNING, "Failed to read PEM file: " + path, e);
 			return null;
 		}
+	}
+
+	/**
+	 * Builds the {@link ContextPropagators} a configuration names.
+	 * <p>
+	 * Without these, an SDK propagates nothing: it injects no
+	 * {@code traceparent} on the way out and continues no trace on the way in,
+	 * so every inbound request starts a trace of its own and the
+	 * {@code ContextPropagators} service published alongside the SDK is a no-op.
+	 * <p>
+	 * The names follow the {@code otel.propagators} convention:
+	 * {@code tracecontext} for W3C Trace Context, {@code baggage} for W3C
+	 * Baggage, and {@code none} for no propagation at all. Unknown names are
+	 * logged and skipped rather than failing the configuration.
+	 *
+	 * @param names the configured propagator names; empty means the defaults
+	 * @return the composite propagator, never {@code null}
+	 */
+	protected ContextPropagators buildPropagators(String[] names) {
+		if (names == null || names.length == 0) {
+			return ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(),
+					W3CBaggagePropagator.getInstance()));
+		}
+		List<TextMapPropagator> propagators = new ArrayList<>();
+		for (String name : names) {
+			String wanted = name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
+			switch (wanted) {
+			case "":
+				break;
+			case "none":
+				return ContextPropagators.noop();
+			case "tracecontext":
+				propagators.add(W3CTraceContextPropagator.getInstance());
+				break;
+			case "baggage":
+				propagators.add(W3CBaggagePropagator.getInstance());
+				break;
+			default:
+				LOG.log(Level.WARNING, "Unknown propagator, ignored: {0}", name);
+				break;
+			}
+		}
+		if (propagators.isEmpty()) {
+			return ContextPropagators.noop();
+		}
+		return ContextPropagators.create(TextMapPropagator.composite(propagators));
 	}
 
 	/**

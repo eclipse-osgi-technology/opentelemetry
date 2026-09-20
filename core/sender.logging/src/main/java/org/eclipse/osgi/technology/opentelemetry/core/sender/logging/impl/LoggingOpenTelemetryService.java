@@ -88,6 +88,6 @@ public class LoggingOpenTelemetryService
 				.addLogRecordProcessor(SimpleLogRecordProcessor.create(SystemOutLogRecordExporter.create())).build();
 
 		return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).setMeterProvider(meterProvider)
-				.setLoggerProvider(loggerProvider).build();
+				.setLoggerProvider(loggerProvider).setPropagators(buildPropagators(config.propagators())).build();
 	}
 }
