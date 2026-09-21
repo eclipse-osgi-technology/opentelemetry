@@ -50,7 +50,7 @@
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
             <version>3.1.0</version>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
         
         <dependency>
@@ -91,27 +91,64 @@
             <version>1.9.26</version>
             <scope>test</scope>
         </dependency>
-        
-        
-        
-        
-        
-        
+
+        <dependency>
+            <groupId>org.eclipse.osgi-technology.rest</groupId>
+            <artifactId>org.eclipse.osgitech.rest.servlet.whiteboard</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.jetty</artifactId>
+            <version>5.1.34</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- slf4j.api (pulled in transitively by felix.http.jetty) needs an
+             SLF4JServiceProvider on the framework to resolve -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.13</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Real UriBuilder implementation for JaxrsMetricsFilterTest's route-template
+             assertions, rather than mocking jakarta.ws.rs.core.UriBuilder -->
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+            <version>3.1.3</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.10.2</version>
+            <version>5.12.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.10.2</version>
+            <version>1.12.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.14.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.14.1</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -144,17 +181,8 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <configuration>
-                    <bnd><![CDATA[
--dsannotations-options: norequirements
-Import-Package: \
-    org.osgi.service.jakartars.runtime;resolution:=optional,\
-    org.osgi.service.jakartars.runtime.dto;resolution:=optional,\
-    *
-                    ]]></bnd>
-                </configuration>
             </plugin>
-        
+
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-resolver-maven-plugin</artifactId>
