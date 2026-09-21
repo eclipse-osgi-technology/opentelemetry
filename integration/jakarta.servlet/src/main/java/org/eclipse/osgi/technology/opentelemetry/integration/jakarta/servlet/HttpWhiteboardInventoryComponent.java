@@ -63,14 +63,14 @@ public class HttpWhiteboardInventoryComponent {
     private static final Logger LOG = Logger.getLogger(HttpWhiteboardInventoryComponent.class.getName());
     private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.jakarta.servlet";
 
-    @Reference(policy = ReferencePolicy.DYNAMIC)
-    private volatile OpenTelemetry openTelemetry;
+    private final OpenTelemetry openTelemetry;
 
     private final ConcurrentHashMap<HttpServiceRuntime, Long> services = new ConcurrentHashMap<>();
 
     @Activate
-    public void activate() {
-        LOG.info("HttpWhiteboardInventoryComponent activated");
+    public HttpWhiteboardInventoryComponent(@Reference OpenTelemetry openTelemetry) {
+        this.openTelemetry = openTelemetry;
+        LOG.info("HttpWhiteboardMetricsComponent activated");
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
