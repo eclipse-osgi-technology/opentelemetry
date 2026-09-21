@@ -60,13 +60,13 @@ public class JaxrsWhiteboardInventoryComponent {
     private static final Logger LOG = Logger.getLogger(JaxrsWhiteboardInventoryComponent.class.getName());
     private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.jakarta.rest";
 
-    @Reference(policy = ReferencePolicy.DYNAMIC)
-    private volatile OpenTelemetry openTelemetry;
+    private final OpenTelemetry openTelemetry;
 
     private final ConcurrentHashMap<JakartarsServiceRuntime, Long> services = new ConcurrentHashMap<>();
 
     @Activate
-    public void activate() {
+    public JaxrsWhiteboardInventoryComponent(@Reference OpenTelemetry openTelemetry) {
+    	this.openTelemetry = openTelemetry;
         LOG.info("JaxrsWhiteboardInventoryComponent activated");
     }
 
