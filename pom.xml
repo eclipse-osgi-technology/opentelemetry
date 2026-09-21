@@ -293,34 +293,49 @@
 					<artifactId>maven-jar-plugin</artifactId>
 					<version>3.4.2</version>
 				</plugin>
+				<!-- We must respecify this to use just the artifact id in names -->
 				<plugin>
 					<groupId>biz.aQute.bnd</groupId>
 					<artifactId>bnd-maven-plugin</artifactId>
 					<version>${bnd.version}</version>
 					<extensions>true</extensions>
 					<executions>
-											<execution>
-							<id>jar</id>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-							<configuration>
-								<bnd><![CDATA[
-SPDX-License-Identifier: ${project.licenses[0].name}
-Bundle-SymbolicName: ${project.artifactId}
-]]></bnd>
-							</configuration>
+						<execution>
+							<id>bnd-process</id>
+              				<goals>
+              					<goal>bnd-process</goal>
+      				        </goals>
+              				<configuration>
+                				<bnd><![CDATA[
+                                Bundle-SymbolicName: ${project.artifactId}
+                                Bundle-Copyright: Copyright (c) Contributors to the Eclipse Foundation.
+                                Git-Descriptor: ${system-allow-fail;git describe --dirty --always --abbrev=9}
+                                Git-SHA: ${system-allow-fail;git rev-list -1 --no-abbrev-commit HEAD}
+                                SPDX-License-Identifier: ${project.licenses[0].name}
+                                -noextraheaders: true
+                                -reproducible: true
+                                ]]></bnd>
+              					<bndfile>bnd.bnd</bndfile>
+             				</configuration>
 						</execution>
 						<execution>
-							<id>test-jar</id>
+							<id>bnd-process-tests</id>
 							<goals>
 								<goal>test-jar</goal>
 							</goals>
 							<configuration>
 								<bnd><![CDATA[
-Bundle-SymbolicName: ${project.artifactId}-tests
-]]></bnd>
-								<testCases>junit5</testCases>
+                                Bundle-SymbolicName: ${project.artifactId}-tests
+                                Fragment-Host: ${project.artifactId}
+                                Git-Descriptor: ${system-allow-fail;git describe --dirty --always --abbrev=9}
+                                Git-SHA: ${system-allow-fail;git rev-list -1 --no-abbrev-commit HEAD}
+                                Test-Cases: ${classes;HIERARCHY_INDIRECTLY_ANNOTATED;org.junit.platform.commons.annotation.Testable;CONCRETE;NAMED;*.integration.*}
+                                -fixupmessages: *for this fragment/require bundle cannot be found on the classpath
+                                -noextraheaders: true
+                                -noimportjava: true
+                                ]]></bnd>
+								<testCases>useTestCasesHeader</testCases>
+								<bndfile>tests.bnd</bndfile>
 							</configuration>
 						</execution>
 					</executions>
