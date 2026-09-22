@@ -61,13 +61,13 @@ public class HttpWhiteboardMetricsComponent {
     private static final String INSTRUMENTATION_SCOPE = "org.eclipse.osgi.technology.opentelemetry.integration.jakarta.servlet";
     private static final AttributeKey<Long> SERVICE_ID_KEY = AttributeKey.longKey("osgi.service.id");
 
-    @Reference(policy = ReferencePolicy.DYNAMIC)
-    private volatile OpenTelemetry openTelemetry;
+    private final OpenTelemetry openTelemetry;
 
     private final ConcurrentHashMap<HttpServiceRuntime, HttpWhiteboardMetricsState> services = new ConcurrentHashMap<>();
 
     @Activate
-    public void activate() {
+    public HttpWhiteboardMetricsComponent(@Reference OpenTelemetry openTelemetry) {
+        this.openTelemetry = openTelemetry;
         LOG.info("HttpWhiteboardMetricsComponent activated");
     }
 
