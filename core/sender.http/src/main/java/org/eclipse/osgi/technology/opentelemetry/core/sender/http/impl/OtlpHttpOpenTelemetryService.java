@@ -142,7 +142,7 @@ public class OtlpHttpOpenTelemetryService
 				.build();
 
 		return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).setMeterProvider(meterProvider)
-				.setLoggerProvider(loggerProvider).build();
+				.setLoggerProvider(loggerProvider).setPropagators(buildPropagators(config.propagators())).build();
 	}
 
 	private void configureTls(OtlpHttpSpanExporterBuilder builder, byte[] trustedCerts, byte[] clientCert,

@@ -50,4 +50,9 @@ public @interface LoggingOpenTelemetryConfiguration {
 			+ "These become part of the OpenTelemetry Resource and appear on every trace, metric, "
 			+ "and log record. Example: deployment.environment=production")
 	String[] additionalResourceAttributes() default {};
+
+	@AttributeDefinition(name = "Context Propagators", description = "Propagators used to inject and extract trace "
+			+ "context across process boundaries, following the 'otel.propagators' convention: 'tracecontext' for W3C "
+			+ "Trace Context, 'baggage' for W3C Baggage, 'none' to disable propagation.")
+	String[] propagators() default { "tracecontext", "baggage" };
 }

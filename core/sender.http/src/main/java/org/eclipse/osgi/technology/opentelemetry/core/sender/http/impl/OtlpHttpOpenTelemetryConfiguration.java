@@ -57,6 +57,11 @@ public @interface OtlpHttpOpenTelemetryConfiguration {
 			+ "and log record. Example: deployment.environment=production")
 	String[] additionalResourceAttributes() default {};
 
+	@AttributeDefinition(name = "Context Propagators", description = "Propagators used to inject and extract trace "
+			+ "context across process boundaries, following the 'otel.propagators' convention: 'tracecontext' for W3C "
+			+ "Trace Context, 'baggage' for W3C Baggage, 'none' to disable propagation.")
+	String[] propagators() default { "tracecontext", "baggage" };
+
 	// --- Transport ---
 
 	@AttributeDefinition(name = "OTLP Endpoint", description = "The OTLP/HTTP base endpoint URL. Signal-specific paths "
